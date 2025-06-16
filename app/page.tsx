@@ -37,7 +37,7 @@ export default function LandingPage() {
             <h2 className="text-3xl md:text-4xl font-bold mb-6">La nostra storia</h2>
             <p className="text-lg leading-relaxed mb-6">
               Virtese nasce da una lunga tradizione familiare. I nostri nonni, pescatori appassionati e cuochi generosi, 
-              ci hanno trasmesso l'amore per il mare e per i suoi sapori autentici. Oggi, continuiamo quel viaggio 
+              ci hanno trasmesso l&apos;amore per il mare e per i suoi sapori autentici. Oggi, continuiamo quel viaggio 
               offrendo piatti che raccontano storie di famiglia, di onde e di stagioni passate sul molo.
             </p>
             <Link
