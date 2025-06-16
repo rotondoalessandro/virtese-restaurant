@@ -253,7 +253,7 @@ export default function LandingPage() {
           viewport={{ once: true }}
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Cosa dicono di noi</h2>
-          <p className="italic mb-6">"Il miglior ristorante vista mare della zona, pesce freschissimo e staff super accogliente!"</p>
+          <p className="italic mb-6">&quot;Il miglior ristorante vista mare della zona, pesce freschissimo e staff super accogliente!&quot;</p>
           <p className="font-semibold">– Recensione Google ⭐⭐⭐⭐⭐</p>
         </motion.div>
       </section>
