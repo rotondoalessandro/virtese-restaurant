@@ -28,7 +28,7 @@ export default function ContattiPage() {
       } else {
         throw new Error();
       }
-    } catch (err) {
+    } catch {
       setError(true);
     } finally {
       setLoading(false);
