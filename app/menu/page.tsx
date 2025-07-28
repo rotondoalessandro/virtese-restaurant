@@ -4,7 +4,7 @@ import Image from 'next/image';
 
 export default function MenuPage() {
   return (
-    <div className="bg-[#f9f5ef] text-[#1e1e1e] font-newsreader min-h-screen pt-32 px-6 md:px-16">
+    <div className="bg-[#f9f5ef] text-[#1e1e1e] font-newsreader min-h-screen pt-32 px-6 md:px-16 pb-20">
       {/* Logo */}
       <div className="text-center mb-12">
         <Image

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Newsreader } from "next/font/google";
 import Navbar from "./Navbar";
+import Footer from "./Footer";
 import "./globals.css";
 
 // Font: Newsreader
@@ -26,6 +27,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <Navbar />
         {children}
+        <Footer />
       </body>
     </html>
   );

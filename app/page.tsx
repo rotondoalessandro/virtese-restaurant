@@ -7,12 +7,20 @@ import { motion } from 'framer-motion';
 import Lightbox from 'yet-another-react-lightbox';
 import 'yet-another-react-lightbox/styles.css';
 
-const images = Array.from({ length: 8 }).map((_, i) => ({
-  src: '/hero-restaurant.jpg', // 🔁 Cambia con le immagini vere
-  alt: `Galleria ${i + 1}`,
-}));
+import OpeningTimes from "@/app/components/OpeningTimes"
 
-export default function LandingPage() {
+const images = [
+  { src: '/hero-restaurant.jpg', alt: 'Galleria 1' },
+  { src: '/la-nostra-storia.jpg', alt: 'Galleria 2' },
+  { src: '/plate.jpg', alt: 'Galleria 3' },
+  { src: '/hero-restaurant.jpg', alt: 'Galleria 4' },
+  { src: '/la-nostra-storia.jpg', alt: 'Galleria 5' },
+  { src: '/plate.jpg', alt: 'Galleria 6' },
+  { src: '/hero-restaurant.jpg', alt: 'Galleria 7' },
+  { src: '/la-nostra-storia.jpg', alt: 'Galleria 8' },
+];
+
+export default function Home() {
   const [index, setIndex] = useState(-1);
 
   return (
@@ -92,7 +100,7 @@ export default function LandingPage() {
             viewport={{ once: true }}
           >
             <Image
-              src="/plate.jpg"
+              src="/la-nostra-storia.jpg"
               alt="Piatto di mare"
               width={600}
               height={400}
@@ -130,7 +138,7 @@ export default function LandingPage() {
             viewport={{ once: true }}
           >
             <Image
-              src="/hero-restaurant.jpg"
+              src="/plate.jpg"
               alt="Menu"
               width={900}
               height={500}
@@ -153,6 +161,8 @@ export default function LandingPage() {
           </motion.div>
         </div>
       </section>
+
+      <OpeningTimes />
 
       {/* Location */}
       <section className="bg-[#f5efe6] text-black py-20 px-6 md:px-12">
@@ -184,6 +194,15 @@ export default function LandingPage() {
               Dove siamo
             </motion.h2>
             <motion.p
+              className="text-lg leading-relaxed mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              viewport={{ once: true }}
+            >
+              📌 Via Posillipo, 250, 80123 Napoli NA
+            </motion.p>
+                        <motion.p
               className="text-lg leading-relaxed mb-6"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -277,18 +296,6 @@ export default function LandingPage() {
           </a>
         </motion.div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-[#111] text-white py-12 px-6 text-center">
-        <p className="mb-2">© 2025 Virtese Restaurant. Tutti i diritti riservati.</p>
-        <div className="space-x-4">
-          <Link href="/privacy">Privacy</Link>
-          <span>|</span>
-          <Link href="/contatti">Contatti</Link>
-          <span>|</span>
-          <Link href="https://instagram.com/virtese" target="_blank">Instagram</Link>
-        </div>
-      </footer>
     </div>
   );
 }
