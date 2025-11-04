@@ -1,22 +1,9 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
   images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'cdn.sanity.io',
-      },
-    ],
+    domains: ['images.unsplash.com', 'cdn.sanity.io'],
   },
+};
 
-  // 👇 Fix build su Vercel (disabilita LightningCSS)
-  experimental: {
-    optimizeCss: false,
-  },
-}
-
-export default nextConfig
+export default nextConfig;
