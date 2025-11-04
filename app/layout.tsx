@@ -1,32 +1,19 @@
 import type { Metadata } from "next";
-import { Newsreader } from "next/font/google";
-import Navbar from "./Navbar";
-import Footer from "./Footer";
 import "./globals.css";
-
-// Font: Newsreader
-const newsreader = Newsreader({
-  variable: "--font-newsreader",
-  subsets: ["latin"],
-  weight: ["300", "400", "600", "700"],
-  display: "swap",
-});
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 export const metadata: Metadata = {
   title: "Virtese Restaurant",
-  description: "Eleganza e tradizione sul mare",
+  description: "An example of a restaurant website",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="it" className={newsreader.variable}>
-      <body className="font-sans antialiased">
+    <html lang="en">
+      <body>
         <Navbar />
-        {children}
+        <main className="min-h-[60vh]">{children}</main>
         <Footer />
       </body>
     </html>

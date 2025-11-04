@@ -1,0 +1,2 @@
+-- placeholder: this migration was applied in the database already.
+-- no-op to reconcile local migration history.

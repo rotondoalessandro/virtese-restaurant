@@ -1,26 +1,41 @@
 @import "tailwindcss";
 
+/* Tokens base */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0b0b0b;   /* dark elegante */
+  --foreground: #f5f5f5;
+  --muted: #a1a1aa;
+  --card: #121212;
+  --accent: #ffffff;
 }
 
+/* Mappa a Tailwind */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-muted: var(--muted);
+  --color-card: var(--card);
+  --color-accent: var(--accent);
+
+  /* Font “normale”: system */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+               Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* Reset soft */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+html { text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
+body { margin: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-newsreader), serif;
+/* Selezione */
+::selection { background: color-mix(in oklab, var(--accent) 12%, transparent); }
+
+/* Safe area (notch) */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
 }
