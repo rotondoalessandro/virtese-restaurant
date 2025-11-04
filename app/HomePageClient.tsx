@@ -6,50 +6,42 @@ import { motion } from 'framer-motion'
 import { urlForImage } from '@/lib/sanity.image'
 
 /**
- * 🔧 Definizione locale del tipo per il builder,
- * compatibile con Sanity ma senza import diretti dal modulo.
+ * ✅ Tipo base per immagine Sanity
  */
-type ImageUrlBuilderLike = {
-  width: (n: number) => ImageUrlBuilderLike
-  height: (n: number) => ImageUrlBuilderLike
-  fit: (mode: string) => ImageUrlBuilderLike
-  url: () => string
-}
-
 export type SanityImage = {
   asset?: { _ref?: string; _id?: string }
   alt?: string
+  url?: string
 }
 
-/**
- * ✅ Helper per ottenere sempre una stringa URL valida
- * senza errori TypeScript o ESM.
- */
+// 🔧 Tipo minimale per Sanity Image Builder
+type SanityBuilder = {
+  width: (n: number) => SanityBuilder
+  height: (n: number) => SanityBuilder
+  fit: (mode: string) => SanityBuilder
+  url: () => string
+}
+
 function getImageUrl(src?: SanityImage, fallback?: string): string {
-  // niente immagine → ritorna subito fallback
   if (!src || !src.asset || (!src.asset._ref && !src.asset._id)) {
     return fallback || ''
   }
 
   try {
     const built = urlForImage(src)
-    if (
-      built &&
-      typeof built === 'object' &&
-      typeof (built as { url: () => string }).url === 'function'
-    ) {
-      return (built as { width: (n: number) => any; height: (n: number) => any; fit: (m: string) => any; url: () => string })
-        .width(1400)
-        .height(900)
-        .fit('crop')
-        .url()
+
+    // Se è già una stringa, restituiscila subito
+    if (typeof built === 'string') {
+      return built || fallback || ''
     }
+
+    // ✅ Tipizzato come SanityBuilder, niente any
+    const builder = built as unknown as SanityBuilder
+    return builder.width(1400).height(900).fit('crop').url()
   } catch (err) {
     console.warn('⚠️ Sanity image fallback used:', err)
+    return fallback || ''
   }
-
-  // fallback se qualcosa va storto
-  return fallback || ''
 }
 
 type HomepageData = {
@@ -115,7 +107,6 @@ const fade = {
 }
 
 export function HomePageClient({ homepage }: Props) {
-  // HERO
   const heroTagline = homepage?.heroTagline || 'Virtese Restaurant · London'
   const heroTitle = homepage?.heroTitle || 'Modern Tuscan Kitchen'
   const heroSubtitle =
