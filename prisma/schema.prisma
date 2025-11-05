@@ -101,13 +101,23 @@ model Invite {
    CUSTOMERS & BOOKINGS
 ======================= */
 model Customer {
-  id               String    @id @default(cuid())
-  email            String?   @unique
-  phone            String?
-  name             String?
-  notes            String?
+  id      String   @id @default(cuid())
+  email   String?  @unique
+  phone   String?
+
+  // NOME / COGNOME
+  name    String?  // nome
+  surname String?  // cognome
+
+  notes   String?
+
+  // CONSENSI
   marketingConsent Boolean   @default(false)
-  createdAt        DateTime  @default(now())
+  profilingConsent Boolean   @default(false)
+  privacyConsent   Boolean   @default(false)
+  consentUpdatedAt DateTime?
+
+  createdAt DateTime @default(now())
 
   bookings Booking[]
 }

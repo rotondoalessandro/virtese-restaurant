@@ -27,7 +27,7 @@
 *::before,
 *::after { box-sizing: border-box; }
 html { text-size-adjust: 100%; -webkit-text-size-adjust: 100%; }
-body { margin: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body { margin: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; background-color: #0b0b0b; }
 
 /* Selezione */
 ::selection { background: color-mix(in oklab, var(--accent) 12%, transparent); }

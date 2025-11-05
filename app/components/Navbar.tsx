@@ -8,7 +8,7 @@ export default async function Navbar() {
   const email = session?.user?.email
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 bg-black/40 backdrop-blur-md border-b border-zinc-800">
+    <header className="sticky top-0 z-50 bg-black/40 backdrop-blur-md border-b border-zinc-800">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo / brand */}
         <Link

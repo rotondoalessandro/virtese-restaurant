@@ -1,17 +1,12 @@
 import { buildIcs } from "@/lib/ics";
-import nodemailer from "nodemailer";
+import { mailer } from "@/lib/mail";
 import type { Booking, Customer } from "@prisma/client";
 
 type BookingWithCustomer = Booking & {
   customer: Customer | null;
 };
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST!,
-  port: Number(process.env.SMTP_PORT!),
-  secure: Number(process.env.SMTP_PORT) === 465,
-  auth: { user: process.env.SMTP_USER!, pass: process.env.SMTP_PASS! },
-});
+// centralized mailer imported from lib/mail
 
 export async function sendReminderEmail(booking: BookingWithCustomer) {
   const customer = booking.customer;
@@ -46,7 +41,7 @@ export async function sendReminderEmail(booking: BookingWithCustomer) {
     </div>
   `;
 
-  await transporter.sendMail({
+  await mailer.sendMail({
     from: process.env.SMTP_FROM!,
     to: customer.email,
     subject: "Reminder: your reservation at Virtese",

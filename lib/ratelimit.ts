@@ -34,6 +34,13 @@ export const rlCancel = new Ratelimit({
   analytics: true,
 });
 
+export const rlContact = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(3, "1 m"), // contact form is sensitive — stricter
+  prefix: "rl:contact",
+  analytics: true,
+});
+
 // Utility: estrae IP
 export function ipFromRequest(req: Request) {
   // Vercel/Proxy: X-Forwarded-For

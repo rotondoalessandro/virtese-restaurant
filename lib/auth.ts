@@ -3,7 +3,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
 import type { NextAuthOptions } from "next-auth";
 import EmailProvider from "next-auth/providers/email";
-import nodemailer from "nodemailer";
+import { mailer } from "@/lib/mail";
 import type { Role } from "@prisma/client";
 
 // Permetti di configurare i domini consentiti via env, fallback a lista hardcoded
@@ -18,14 +18,7 @@ function getAllowedDomains(): string[] {
   return ["@virtese.com", "@restaurant.local"];
 }
 
-function getTransport() {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST!,
-    port: Number(process.env.SMTP_PORT!),
-    secure: Number(process.env.SMTP_PORT) === 465,
-    auth: { user: process.env.SMTP_USER!, pass: process.env.SMTP_PASS! },
-  });
-}
+// Use centralized mailer
 
 // Tipi helper locali per estendere token/session senza usare `any`
 type TokenWithRole = {
@@ -47,8 +40,7 @@ export const authOptions: NextAuthOptions = {
       from: process.env.SMTP_FROM!,
       maxAge: 60 * 30, // 30 minuti per il magic link
       async sendVerificationRequest({ identifier, url, provider }) {
-        const transport = getTransport();
-        await transport.sendMail({
+        await mailer.sendMail({
           to: identifier,
           from: provider.from,
           subject: "Sign in to Virtese Restaurant",

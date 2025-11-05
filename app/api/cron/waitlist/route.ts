@@ -1,10 +1,20 @@
 export const runtime = "nodejs";
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSlots } from "@/lib/availability";
 
-export async function GET() {
+function authorizeCron(req: NextRequest) {
+  const secret = process.env.CRON_SECRET || "";
+  const auth = req.headers.get("authorization") || "";
+  const header = req.headers.get("x-cron-secret") || "";
+  return !!secret && (auth === `Bearer ${secret}` || header === secret);
+}
+
+export async function GET(req: NextRequest) {
+  if (!authorizeCron(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
     const now = new Date();
     const twoWeeks = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);

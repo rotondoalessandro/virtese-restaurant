@@ -1,15 +1,7 @@
-import nodemailer from "nodemailer";
+import { mailer } from "@/lib/mail";
 import { buildIcs } from "@/lib/ics"; // 👈 nuovo import ICS helper
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST!,
-  port: Number(process.env.SMTP_PORT!),
-  secure: Number(process.env.SMTP_PORT) === 465,
-  auth: {
-    user: process.env.SMTP_USER!,
-    pass: process.env.SMTP_PASS!,
-  },
-});
+// centralized mailer imported from lib/mail
 
 // ----------------------------------------
 // 📩 CONFIRMATION EMAIL + ICS ATTACHMENT
@@ -75,7 +67,7 @@ export async function sendBookingConfirmation(
   console.log("[email] Sent booking confirmation to:", to);
   console.log("[email] Manage URL:", manageUrl);
 
-  await transporter.sendMail({
+  await mailer.sendMail({
     from: process.env.SMTP_FROM!,
     to,
     subject: "Your table at Virtese Restaurant is confirmed",
@@ -120,7 +112,7 @@ export async function sendAdminNotification(
   </div>
   `;
 
-  await transporter.sendMail({
+  await mailer.sendMail({
     from: process.env.SMTP_FROM!,
     to,
     subject: `New booking – ${formatted}`,
@@ -154,7 +146,7 @@ export async function sendWaitlistNotification(to: string, details: {
   </div>
   `
 
-  await transporter.sendMail({
+  await mailer.sendMail({
     from: process.env.SMTP_FROM!,
     to,
     subject: "Waitlist update — a table may be available",

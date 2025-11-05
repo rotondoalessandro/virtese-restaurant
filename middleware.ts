@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest, NextFetchEvent } from "next/server";
 import type { NextRequestWithAuth } from "next-auth/middleware";
 import { withAuth } from "next-auth/middleware";
-import { ipFromRequest, rlHold, rlBook, rlWaitlist, rlCancel } from "@/lib/ratelimit";
+import { ipFromRequest, rlHold, rlBook, rlWaitlist, rlCancel, rlContact } from "@/lib/ratelimit";
 
 // Protezione area /admin con NextAuth
 const adminAuth = withAuth({
@@ -46,6 +46,8 @@ export default async function middleware(req: NextRequest, event: NextFetchEvent
         result = await rlWaitlist.limit(ip);
       } else if (pathname.startsWith("/api/cancel")) {
         result = await rlCancel.limit(ip);
+      } else if (pathname.startsWith("/api/contact")) {
+        result = await rlContact.limit(ip);
       }
 
       if (result && !result.success) {
@@ -77,6 +79,7 @@ export const config = {
     "/api/book",
     "/api/waitlist",
     "/api/cancel",
+    "/api/contact",
 
     // Area admin da proteggere
     "/admin/:path*",

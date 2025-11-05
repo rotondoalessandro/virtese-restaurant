@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@prisma/client";
 import { startOfDay, endOfDay, addDays, parseISO } from "date-fns";
 import Link from "next/link";
 import { requireRole } from "@/lib/authz";
@@ -23,11 +24,16 @@ export const dynamic = "force-dynamic";
 export default async function AdminBookings({
   searchParams,
 }: {
-  // 👇 in Next 15 è una Promise
-  searchParams: Promise<{ preset?: string; from?: string; to?: string }>;
+  // Next 15: Promise
+  searchParams: Promise<{
+    preset?: string;
+    from?: string;
+    to?: string;
+    customerEmail?: string;
+  }>;
 }) {
   await requireRole([Role.OWNER, Role.MANAGER, Role.HOST]);
-  const sp = await searchParams; // 👈 attendi prima di leggere le props
+  const sp = await searchParams;
 
   let from: Date, to: Date;
   if (sp.from && sp.to) {
@@ -37,8 +43,20 @@ export default async function AdminBookings({
     [from, to] = rangeFromPreset(sp.preset);
   }
 
+  const customerEmail = sp.customerEmail?.trim() || undefined;
+
+  const where: Prisma.BookingWhereInput = {
+    dateTime: { gte: from, lte: to },
+  };
+
+  if (customerEmail) {
+    where.customer = {
+      email: customerEmail,
+    };
+  }
+
   const bookings = await prisma.booking.findMany({
-    where: { dateTime: { gte: from, lte: to } },
+    where,
     include: { customer: true, tables: { include: { table: true } } },
     orderBy: { dateTime: "asc" },
     take: 300,
@@ -64,6 +82,12 @@ export default async function AdminBookings({
   const presetLinkBase =
     "inline-flex items-center rounded-full border px-4 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.2em] transition";
 
+  const withCustomerEmail = (href: string) => {
+    if (!customerEmail) return href;
+    const sep = href.includes("?") ? "&" : "?";
+    return `${href}${sep}customerEmail=${encodeURIComponent(customerEmail)}`;
+  };
+
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       {/* Header */}
@@ -79,6 +103,12 @@ export default async function AdminBookings({
           See upcoming reservations, adjust details, and jump straight into
           each booking.
         </p>
+        {customerEmail && (
+          <p className="text-[0.7rem] text-zinc-500">
+            Filtered by customer email:{" "}
+            <span className="font-mono text-zinc-200">{customerEmail}</span>
+          </p>
+        )}
       </header>
 
       {/* Preset filters */}
@@ -89,7 +119,7 @@ export default async function AdminBookings({
               ? "border-amber-400 bg-amber-500/10 text-amber-200"
               : "border-zinc-700 bg-black/40 text-zinc-200 hover:border-amber-400 hover:text-amber-200"
           }`}
-          href="/admin/bookings?preset=today"
+          href={withCustomerEmail("/admin/bookings?preset=today")}
         >
           Today
         </Link>
@@ -99,7 +129,7 @@ export default async function AdminBookings({
               ? "border-amber-400 bg-amber-500/10 text-amber-200"
               : "border-zinc-700 bg-black/40 text-zinc-200 hover:border-amber-400 hover:text-amber-200"
           }`}
-          href="/admin/bookings?preset=tomorrow"
+          href={withCustomerEmail("/admin/bookings?preset=tomorrow")}
         >
           Tomorrow
         </Link>
@@ -109,10 +139,11 @@ export default async function AdminBookings({
               ? "border-amber-400 bg-amber-500/10 text-amber-200"
               : "border-zinc-700 bg-black/40 text-zinc-200 hover:border-amber-400 hover:text-amber-200"
           }`}
-          href="/admin/bookings"
+          href={withCustomerEmail("/admin/bookings")}
         >
           ±7 days
         </Link>
+
         <span className="ml-auto text-[0.7rem] text-zinc-500">
           Showing{" "}
           <span className="font-semibold text-zinc-200">
@@ -137,54 +168,61 @@ export default async function AdminBookings({
             </tr>
           </thead>
           <tbody>
-            {bookings.map((b, idx) => (
-              <tr
-                key={b.id}
-                className={`border-b border-zinc-900/80 ${
-                  idx % 2 === 0 ? "bg-black/20" : "bg-zinc-900/20"
-                }`}
-              >
-                <td className="py-2.5 pl-4 pr-2 align-top text-zinc-200">
-                  {b.dateTime.toLocaleDateString("en-GB", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "2-digit",
-                  })}
-                </td>
-                <td className="px-2 py-2.5 align-top text-zinc-200">
-                  {b.dateTime.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </td>
-                <td className="px-2 py-2.5 align-top text-zinc-100">
-                  {b.customer?.name ?? "Guest"}
-                </td>
-                <td className="px-2 py-2.5 align-top text-zinc-200">
-                  {b.partySize}
-                </td>
-                <td className="px-2 py-2.5 align-top">
-                  <span
-                    className={`inline-flex w-fit items-center rounded-full border px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.2em] ${statusClass(
-                      b.status
-                    )}`}
-                  >
-                    {b.status}
-                  </span>
-                </td>
-                <td className="px-2 py-2.5 align-top text-zinc-200">
-                  {b.tables.map((t) => t.table.code).join(", ") || "—"}
-                </td>
-                <td className="px-4 py-2.5 align-top text-right">
-                  <Link
-                    className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-amber-300 hover:text-amber-200"
-                    href={`/admin/bookings/${b.id}/edit`}
-                  >
-                    Edit
-                  </Link>
-                </td>
-              </tr>
-            ))}
+            {bookings.map((b, idx) => {
+              const fullName =
+                [b.customer?.name, b.customer?.surname]
+                  .filter(Boolean)
+                  .join(" ") || "Guest";
+
+              return (
+                <tr
+                  key={b.id}
+                  className={`border-b border-zinc-900/80 ${
+                    idx % 2 === 0 ? "bg-black/20" : "bg-zinc-900/20"
+                  }`}
+                >
+                  <td className="py-2.5 pl-4 pr-2 align-top text-zinc-200">
+                    {b.dateTime.toLocaleDateString("en-GB", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "2-digit",
+                    })}
+                  </td>
+                  <td className="px-2 py-2.5 align-top text-zinc-200">
+                    {b.dateTime.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </td>
+                  <td className="px-2 py-2.5 align-top text-zinc-100">
+                    {fullName}
+                  </td>
+                  <td className="px-2 py-2.5 align-top text-zinc-200">
+                    {b.partySize}
+                  </td>
+                  <td className="px-2 py-2.5 align-top">
+                    <span
+                      className={`inline-flex w-fit items-center rounded-full border px-2.5 py-1 text-[0.65rem] font-semibold uppercase tracking-[0.2em] ${statusClass(
+                        b.status
+                      )}`}
+                    >
+                      {b.status}
+                    </span>
+                  </td>
+                  <td className="px-2 py-2.5 align-top text-zinc-200">
+                    {b.tables.map((t) => t.table.code).join(", ") || "—"}
+                  </td>
+                  <td className="px-4 py-2.5 align-top text-right">
+                    <Link
+                      className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-amber-300 hover:text-amber-200"
+                      href={`/admin/bookings/${b.id}/edit`}
+                    >
+                      Edit
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })}
 
             {bookings.length === 0 && (
               <tr>

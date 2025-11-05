@@ -1,28 +1,22 @@
-import { NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
+export const runtime = "nodejs";
 
-export async function POST(req: Request) {
+import { NextRequest, NextResponse } from 'next/server';
+import { requireSameOrigin } from '@/lib/http';
+import { mailer } from '@/lib/mail';
+
+export async function POST(req: NextRequest) {
+  const chk = requireSameOrigin(req as unknown as Request);
+  if (!chk.ok) return NextResponse.json({ error: 'Bad origin' }, { status: 400 });
+
   const { name, email, message } = await req.json();
-
   if (!name || !email || !message) {
     return NextResponse.json({ error: 'Campi mancanti' }, { status: 400 });
   }
 
-  // Configura il tuo SMTP (Aruba, Gmail, ecc.)
-  const transporter = nodemailer.createTransport({
-    host: 'smtps.aruba.it',
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-
   try {
-    await transporter.sendMail({
-      from: `"Virtese Restaurant" <${process.env.SMTP_USER}>`,
-      to: 'info@virtese.com', // la tua email di ricezione
+    await mailer.sendMail({
+      from: process.env.SMTP_FROM!,
+      to: 'info@virtese.com',
       subject: 'Nuovo messaggio dal sito',
       html: `
         <h2>Hai ricevuto un nuovo messaggio</h2>

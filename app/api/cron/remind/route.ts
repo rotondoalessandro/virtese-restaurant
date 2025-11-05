@@ -1,11 +1,21 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { subHours } from "date-fns";
 import { sendReminderEmail } from "@/lib/reminders";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+function authorizeCron(req: NextRequest) {
+  const secret = process.env.CRON_SECRET || "";
+  const auth = req.headers.get("authorization") || "";
+  const header = req.headers.get("x-cron-secret") || "";
+  return !!secret && (auth === `Bearer ${secret}` || header === secret);
+}
+
+export async function GET(req: NextRequest) {
+  if (!authorizeCron(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   // finestra: inviare reminder per prenotazioni tra 23.5h e 24.5h da ora
   const now = new Date();
   const from = subHours(now, -23.5); // = now + 23.5h
