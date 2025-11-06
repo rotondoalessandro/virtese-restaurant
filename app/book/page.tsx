@@ -43,7 +43,7 @@ function Calendar({
 
   const monthLabel = format(currentMonth, "MMMM yyyy", { locale: it });
 
-  // settimana che inizia di lunedì
+  // week starting on Monday
   const start = startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 1 });
   const end = endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 1 });
 
@@ -71,7 +71,7 @@ function Calendar({
 
   return (
     <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4 shadow-lg">
-      {/* Header mese */}
+      {/* Month header */}
       <div className="mb-3 flex items-center justify-between">
         <button
           type="button"
@@ -93,18 +93,18 @@ function Calendar({
         </button>
       </div>
 
-      {/* Giorni della settimana */}
+      {/* Weekdays */}
       <div className="mb-1 grid grid-cols-7 text-center text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-        <span>Lu</span>
-        <span>Ma</span>
-        <span>Me</span>
-        <span>Gi</span>
-        <span>Ve</span>
-        <span>Sa</span>
-        <span>Do</span>
+        <span>Mon</span>
+        <span>Tue</span>
+        <span>Wed</span>
+        <span>Thu</span>
+        <span>Fri</span>
+        <span>Sat</span>
+        <span>Sun</span>
       </div>
 
-      {/* Giorni */}
+      {/* Days */}
       <div className="grid grid-cols-7 gap-1.5 text-sm">
         {weeks.map((week, wi) =>
           week.map((d, di) => {
@@ -119,7 +119,7 @@ function Calendar({
             let style = "";
 
             if (isSelected) {
-              // 🔥 selezionato = pieno arancione SEMPRE
+              // 🔥 selected = solid orange ALWAYS
               style =
                 "border-amber-400 bg-amber-400 text-black shadow-[0_0_0_1px_rgba(251,191,36,0.4)] hover:bg-amber-400 hover:border-amber-400";
             } else if (isDisabled) {
@@ -129,7 +129,7 @@ function Calendar({
                 ? "border-zinc-700 bg-zinc-900 text-zinc-100 hover:border-amber-400 hover:bg-amber-500/20 hover:text-amber-100"
                 : "border-zinc-900 bg-zinc-950 text-zinc-600";
 
-              // giorno di oggi (solo se non selezionato)
+              // today (only if not selected)
               if (isToday) {
                 style += " ring-1 ring-amber-400/60";
               }
@@ -154,11 +154,11 @@ function Calendar({
       <div className="mt-3 flex items-center gap-3 text-[0.7rem] text-zinc-500">
         <div className="flex items-center gap-1.5">
           <span className="inline-flex h-3 w-3 rounded-full border border-amber-400 bg-amber-400" />
-          <span>Data selezionata</span>
+          <span>Selected date</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="inline-flex h-3 w-3 rounded-full border border-zinc-600" />
-          <span>Disponibile</span>
+          <span>Available</span>
         </div>
       </div>
     </div>
@@ -168,9 +168,9 @@ function Calendar({
 export default function BookPage() {
   const [step, setStep] = useState<Step>(1);
 
-  // dati cliente
-  const [name, setName] = useState("");       // nome
-  const [surname, setSurname] = useState(""); // cognome
+  // customer data
+  const [name, setName] = useState(""); // first name
+  const [surname, setSurname] = useState(""); // last name
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
@@ -180,13 +180,13 @@ export default function BookPage() {
     [name, surname]
   );
 
-  // consensi
+  // consents
   const [consentMarketing, setConsentMarketing] = useState(false);
   const [consentProfiling, setConsentProfiling] = useState(false);
   const [consentPrivacy, setConsentPrivacy] = useState(false);
   const [consentAll, setConsentAll] = useState(false);
 
-  // prenotazione
+  // booking
   const [party, setParty] = useState<number>(2);
   const [date, setDate] = useState<string>(() =>
     new Date().toISOString().slice(0, 10)
@@ -217,7 +217,7 @@ export default function BookPage() {
   const hasForm = !!pickedTime;
   const anyAvailable = !isLoadingSlots && slots.some((s) => s.available > 0);
 
-  // fetch slots SOLO allo step 7
+  // fetch slots ONLY at step 7
   useEffect(() => {
     if (step !== 7) return;
 
@@ -257,7 +257,7 @@ export default function BookPage() {
     };
   }, [step, date, party]);
 
-  // countdown hold
+  // hold countdown
   useEffect(() => {
     if (!expiresAt) return;
 
@@ -269,7 +269,7 @@ export default function BookPage() {
       setSecondsLeft(diff);
       if (diff <= 0) {
         clearInterval(id);
-        // scaduto → chiudi modal e pulisci
+        // expired → close modal and clear
         releaseHold(true);
       }
     }, 1000);
@@ -278,7 +278,7 @@ export default function BookPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expiresAt]);
 
-  // se cambia date/party mentre c'è un hold → annulla
+  // if date/party changes while there's a hold → cancel
   useEffect(() => {
     if (bookingId) releaseHold();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -308,17 +308,17 @@ export default function BookPage() {
     } finally {
       clearHoldState();
       if (!silent) {
-        // opzionale: toast
+        // optional: toast
       }
     }
   }
 
-  // CLICK SULLO SLOT → HOLD + modal (solo note)
+  // CLICK ON SLOT → HOLD + modal (notes only)
   async function clickSlot(time: string) {
     if (isHolding || isLoadingSlots) return;
     setPickedTime(time);
 
-    // se c'è un hold precedente → rilascia prima
+    // if there was a previous hold → release first
     if (bookingId) await releaseHold(true);
 
     setIsHolding(true);
@@ -355,7 +355,7 @@ export default function BookPage() {
     setModalOpen(true);
   }
 
-  // conferma (dal modal) → POST /api/book
+  // confirm (from modal) → POST /api/book
   async function confirmBooking() {
     if (!bookingId || isConfirming) return;
     setIsConfirming(true);
@@ -387,11 +387,11 @@ export default function BookPage() {
 
     alert("Reservation confirmed! Check your email for details.");
 
-    // reset UI minima
+    // minimal UI reset
     setPickedTime(null);
     clearHoldState();
 
-    // refresh availability se siamo ancora allo step 7
+    // refresh availability if we're still on step 7
     if (step === 7) {
       try {
         setIsLoadingSlots(true);
@@ -422,25 +422,25 @@ export default function BookPage() {
   const stepLabel = (s: Step) => {
     switch (s) {
       case 1:
-        return "Nome e cognome";
+        return "Name and surname";
       case 2:
-        return "Telefono";
+        return "Phone";
       case 3:
         return "Email";
       case 4:
-        return "Termini";
+        return "Terms";
       case 5:
-        return "Persone";
+        return "Guests";
       case 6:
-        return "Data";
+        return "Date";
       case 7:
-        return "Orario";
+        return "Time";
     }
   };
 
   const steps: Step[] = [1, 2, 3, 4, 5, 6, 7];
 
-  // validazione per il tasto "Continua"
+  // validation for the "Continue" button
   function canGoNext(current: Step): boolean {
     switch (current) {
       case 1:
@@ -450,7 +450,7 @@ export default function BookPage() {
       case 3:
         return isValidEmail(email);
       case 4:
-        return consentPrivacy; // obbligatorio
+        return consentPrivacy; // required
       case 5:
         return party > 0;
       case 6:
@@ -490,7 +490,7 @@ export default function BookPage() {
           </p>
         </header>
 
-        {/* Stepper con pallini cliccabili (indietro) */}
+        {/* Stepper with clickable dots (backwards) */}
         <div className="mt-6 flex flex-wrap items-center gap-3 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-zinc-500">
           {steps.map((s, idx) => {
             const isCurrent = step === s;
@@ -531,40 +531,40 @@ export default function BookPage() {
         </div>
 
         <section className="mt-6 rounded-2xl border border-zinc-800 bg-black/40 p-5 sm:p-6">
-          {/* STEP 1 – Nome e cognome */}
+          {/* STEP 1 – Name and surname */}
           {step === 1 && (
             <div className="space-y-6">
               <div>
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-400">
-                  Step 1 · Nome e cognome
+                  Step 1 · Name and surname
                 </h2>
                 <p className="mt-2 text-sm text-zinc-300">
-                  Inizia lasciandoci il tuo nome e cognome per la prenotazione.
+                  Start by leaving us your first and last name for the reservation.
                 </p>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2 sm:max-w-xl">
                 <label className="grid gap-1 text-sm">
                   <span className="text-xs uppercase tracking-[0.18em] text-zinc-400">
-                    Nome
+                    First name
                   </span>
                   <input
                     className="rounded-md border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-amber-400"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Es. Mario"
+                    placeholder="E.g. Mario"
                   />
                 </label>
 
                 <label className="grid gap-1 text-sm">
                   <span className="text-xs uppercase tracking-[0.18em] text-zinc-400">
-                    Cognome
+                    Last name
                   </span>
                   <input
                     className="rounded-md border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-amber-400"
                     value={surname}
                     onChange={(e) => setSurname(e.target.value)}
-                    placeholder="Es. Rossi"
+                    placeholder="E.g. Rossi"
                   />
                 </label>
               </div>
@@ -576,35 +576,34 @@ export default function BookPage() {
                   disabled={!canGoNext(1)}
                   className="rounded-full bg-amber-500 px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Continua
+                  Continue
                 </button>
               </div>
             </div>
           )}
 
-          {/* STEP 2 – Telefono */}
+          {/* STEP 2 – Phone */}
           {step === 2 && (
             <div className="space-y-6">
               <div>
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-400">
-                  Step 2 · Numero di telefono
+                  Step 2 · Phone number
                 </h2>
                 <p className="mt-2 text-sm text-zinc-300">
-                  Inserisci un numero di telefono per eventuali comunicazioni sulla
-                  prenotazione.
+                  Enter a phone number for any communications about your reservation.
                 </p>
               </div>
 
               <div className="rounded-xl border border-zinc-800 bg-black/40 p-4 text-sm text-zinc-300">
                 <p>
-                  <span className="font-semibold">Nome:</span>{" "}
+                  <span className="font-semibold">Name:</span>{" "}
                   <span className="font-mono text-zinc-100">{displayName || "—"}</span>
                 </p>
               </div>
 
               <label className="grid gap-1 text-sm sm:max-w-xs">
                 <span className="text-xs uppercase tracking-[0.18em] text-zinc-400">
-                  Telefono
+                  Phone
                 </span>
                 <input
                   type="tel"
@@ -627,7 +626,7 @@ export default function BookPage() {
                   onClick={goBack}
                   className="rounded-full border border-zinc-700 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-100 transition hover:border-amber-400 hover:text-amber-200"
                 >
-                  Indietro
+                  Back
                 </button>
                 <button
                   type="button"
@@ -635,7 +634,7 @@ export default function BookPage() {
                   disabled={!canGoNext(2)}
                   className="rounded-full bg-amber-500 px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Continua
+                  Continue
                 </button>
               </div>
             </div>
@@ -649,17 +648,18 @@ export default function BookPage() {
                   Step 3 · Email
                 </h2>
                 <p className="mt-2 text-sm text-zinc-300">
-                  Useremo questa email per inviarti conferma e dettagli della prenotazione.
+                  We&apos;ll use this email to send you the confirmation and details of
+                  your reservation.
                 </p>
               </div>
 
               <div className="rounded-xl border border-zinc-800 bg-black/40 p-4 text-sm text-zinc-300">
                 <p>
-                  <span className="font-semibold">Nome:</span>{" "}
+                  <span className="font-semibold">Name:</span>{" "}
                   <span className="font-mono text-zinc-100">{displayName || "—"}</span>
                 </p>
                 <p className="mt-1">
-                  <span className="font-semibold">Telefono:</span>{" "}
+                  <span className="font-semibold">Phone:</span>{" "}
                   <span className="font-mono text-zinc-100">{phone || "—"}</span>
                 </p>
               </div>
@@ -673,11 +673,11 @@ export default function BookPage() {
                   className="rounded-md border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-amber-400"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="esempio@email.com"
+                  placeholder="example@email.com"
                 />
                 {email && !isValidEmail(email) && (
                   <span className="mt-1 text-[0.75rem] text-red-400">
-                    Inserisci un indirizzo email valido.
+                    Please enter a valid email address.
                   </span>
                 )}
               </label>
@@ -688,7 +688,7 @@ export default function BookPage() {
                   onClick={goBack}
                   className="rounded-full border border-zinc-700 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-100 transition hover:border-amber-400 hover:text-amber-200"
                 >
-                  Indietro
+                  Back
                 </button>
                 <button
                   type="button"
@@ -696,31 +696,31 @@ export default function BookPage() {
                   disabled={!canGoNext(3)}
                   className="rounded-full bg-amber-500 px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Continua
+                  Continue
                 </button>
               </div>
             </div>
           )}
 
-          {/* STEP 4 – Termini e condizioni */}
+          {/* STEP 4 – Terms and conditions */}
           {step === 4 && (
             <div className="space-y-6">
               <div>
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-400">
-                  Step 4 · Termini e condizioni
+                  Step 4 · Terms and conditions
                 </h2>
                 <p className="mt-2 text-sm text-zinc-300">
-                  Gestisci i consensi per il trattamento dei tuoi dati personali.
+                  Manage consents for the processing of your personal data.
                 </p>
               </div>
 
               <div className="rounded-xl border border-zinc-800 bg-black/40 p-4 text-sm text-zinc-300 space-y-1">
                 <p>
-                  <span className="font-semibold">Nome:</span>{" "}
+                  <span className="font-semibold">Name:</span>{" "}
                   <span className="font-mono text-zinc-100">{displayName || "—"}</span>
                 </p>
                 <p>
-                  <span className="font-semibold">Telefono:</span>{" "}
+                  <span className="font-semibold">Phone:</span>{" "}
                   <span className="font-mono text-zinc-100">{phone || "—"}</span>
                 </p>
                 <p>
@@ -731,10 +731,10 @@ export default function BookPage() {
 
               <div className="space-y-3 text-sm">
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
-                  Termini e condizioni
+                  Terms and conditions
                 </p>
                 <p className="text-[0.8rem] text-zinc-400">
-                  Acconsento all&apos;utilizzo dei miei dati per:
+                  I consent to the use of my data for:
                 </p>
 
                 <label className="flex items-start gap-2 text-sm">
@@ -745,8 +745,8 @@ export default function BookPage() {
                     onChange={(e) => setConsentMarketing(e.target.checked)}
                   />
                   <span>
-                    Consenso marketing e comunicazioni{" "}
-                    <span className="text-xs text-zinc-500">Dettaglio</span>
+                    Marketing and communications consent{" "}
+                    <span className="text-xs text-zinc-500">Details</span>
                   </span>
                 </label>
 
@@ -758,8 +758,8 @@ export default function BookPage() {
                     onChange={(e) => setConsentProfiling(e.target.checked)}
                   />
                   <span>
-                    Consenso profilazione{" "}
-                    <span className="text-xs text-zinc-500">Dettaglio</span>
+                    Profiling consent{" "}
+                    <span className="text-xs text-zinc-500">Details</span>
                   </span>
                 </label>
 
@@ -771,9 +771,9 @@ export default function BookPage() {
                     onChange={(e) => setConsentPrivacy(e.target.checked)}
                   />
                   <span>
-                    Privacy e trattamento dati{" "}
+                    Privacy and data processing{" "}
                     <span className="text-red-400">*</span>{" "}
-                    <span className="text-xs text-zinc-500">Dettaglio</span>
+                    <span className="text-xs text-zinc-500">Details</span>
                   </span>
                 </label>
 
@@ -784,12 +784,12 @@ export default function BookPage() {
                     checked={consentAll}
                     onChange={(e) => handleToggleAll(e.target.checked)}
                   />
-                  <span>Autorizzo tutti i trattamenti</span>
+                  <span>I authorize all processing</span>
                 </label>
 
                 {!consentPrivacy && (
                   <p className="text-[0.75rem] text-red-400">
-                    Il consenso a privacy e trattamento dati è obbligatorio per proseguire.
+                    Privacy and data processing consent is required to continue.
                   </p>
                 )}
               </div>
@@ -800,7 +800,7 @@ export default function BookPage() {
                   onClick={goBack}
                   className="rounded-full border border-zinc-700 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-100 transition hover:border-amber-400 hover:text-amber-200"
                 >
-                  Indietro
+                  Back
                 </button>
                 <button
                   type="button"
@@ -808,31 +808,31 @@ export default function BookPage() {
                   disabled={!canGoNext(4)}
                   className="rounded-full bg-amber-500 px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Continua
+                  Continue
                 </button>
               </div>
             </div>
           )}
 
-          {/* STEP 5 – Numero di persone */}
+          {/* STEP 5 – Number of guests */}
           {step === 5 && (
             <div className="space-y-6">
               <div>
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-400">
-                  Step 5 · Numero di persone
+                  Step 5 · Number of guests
                 </h2>
                 <p className="mt-2 text-sm text-zinc-300">
-                  Quante persone saranno al tavolo?
+                  How many people will be at the table?
                 </p>
               </div>
 
               <div className="rounded-xl border border-zinc-800 bg-black/40 p-4 text-sm text-zinc-300 space-y-1">
                 <p>
-                  <span className="font-semibold">Nome:</span>{" "}
+                  <span className="font-semibold">Name:</span>{" "}
                   <span className="font-mono text-zinc-100">{displayName || "—"}</span>
                 </p>
                 <p>
-                  <span className="font-semibold">Telefono:</span>{" "}
+                  <span className="font-semibold">Phone:</span>{" "}
                   <span className="font-mono text-zinc-100">{phone || "—"}</span>
                 </p>
                 <p>
@@ -843,25 +843,25 @@ export default function BookPage() {
 
               <label className="grid gap-1 text-sm sm:max-w-xs">
                 <span className="text-xs uppercase tracking-[0.18em] text-zinc-400">
-                  Numero di persone
+                  Number of guests
                 </span>
                 <input
                   type="text"
-                  inputMode="numeric" // tastierino numerico su mobile
+                  inputMode="numeric" // numeric keypad on mobile
                   className="rounded-md border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-amber-400"
                   value={party}
                   onChange={(e) => {
                     const value = e.target.value;
-                    // Solo cifre (0–9)
+                    // digits only (0–9)
                     if (/^\d*$/.test(value)) {
                       const num = value === "" ? 0 : parseInt(value, 10);
-                      // Limita tra 1 e 20 (o lascia vuoto)
+                      // limit between 1 and 20 (or allow empty)
                       if (num === 0 || (num >= 1 && num <= 20)) {
                         setParty(num);
                       }
                     }
                   }}
-                  placeholder="Es. 2"
+                  placeholder="E.g. 2"
                 />
               </label>
 
@@ -871,7 +871,7 @@ export default function BookPage() {
                   onClick={goBack}
                   className="rounded-full border border-zinc-700 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-100 transition hover:border-amber-400 hover:text-amber-200"
                 >
-                  Indietro
+                  Back
                 </button>
                 <button
                   type="button"
@@ -879,34 +879,34 @@ export default function BookPage() {
                   disabled={!canGoNext(5)}
                   className="rounded-full bg-amber-500 px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Continua
+                  Continue
                 </button>
               </div>
             </div>
           )}
 
-          {/* STEP 6 – Data */}
+          {/* STEP 6 – Date */}
           {step === 6 && (
             <div className="space-y-6">
               <div>
                 <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-400">
-                  Step 6 · Scegli la data
+                  Step 6 · Choose the date
                 </h2>
                 <p className="mt-2 text-sm text-zinc-300">
-                  Seleziona la data in cui desideri prenotare il tavolo.
+                  Select the date when you want to reserve the table.
                 </p>
               </div>
 
               <div className="rounded-xl border border-zinc-800 bg-black/40 p-4 text-sm text-zinc-300 space-y-1">
                 <p>
-                  <span className="font-semibold">Ospiti:</span>{" "}
+                  <span className="font-semibold">Guests:</span>{" "}
                   <span className="font-mono text-zinc-100">{party}</span>
                 </p>
               </div>
 
               <div className="space-y-2">
                 <p className="text-xs uppercase tracking-[0.18em] text-zinc-400">
-                  Data
+                  Date
                 </p>
                 <Calendar value={date} onChange={setDate} minDate={minDate} />
               </div>
@@ -917,7 +917,7 @@ export default function BookPage() {
                   onClick={goBack}
                   className="rounded-full border border-zinc-700 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-100 transition hover:border-amber-400 hover:text-amber-200"
                 >
-                  Indietro
+                  Back
                 </button>
                 <button
                   type="button"
@@ -925,23 +925,23 @@ export default function BookPage() {
                   disabled={!canGoNext(6)}
                   className="rounded-full bg-amber-500 px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Vedi orari disponibili
+                  See available times
                 </button>
               </div>
             </div>
           )}
 
-          {/* STEP 7 – Orario + waitlist */}
+          {/* STEP 7 – Time + waitlist */}
           {step === 7 && (
             <div className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-400">
-                    Step 7 · Scegli l&apos;orario
+                    Step 7 · Choose the time
                   </h2>
                   <p className="mt-2 text-sm text-zinc-300">
-                    Seleziona uno degli orari disponibili. Il tavolo verrà tenuto in
-                    sospeso mentre confermi la prenotazione.
+                    Select one of the available time slots. The table will be held while
+                    you confirm the reservation.
                   </p>
                 </div>
                 <button
@@ -949,28 +949,28 @@ export default function BookPage() {
                   onClick={goBack}
                   className="rounded-full border border-zinc-700 px-4 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-zinc-100 transition hover:border-amber-400 hover:text-amber-200"
                 >
-                  Modifica dettagli
+                  Edit details
                 </button>
               </div>
 
               <div className="rounded-xl border border-zinc-800 bg-black/40 p-4 text-sm text-zinc-300 space-y-1">
                 <p>
-                  <span className="font-semibold">Nome:</span>{" "}
+                  <span className="font-semibold">Name:</span>{" "}
                   <span className="font-mono text-zinc-100">{displayName || "—"}</span>
                 </p>
                 <p>
-                  <span className="font-semibold">Ospiti:</span>{" "}
+                  <span className="font-semibold">Guests:</span>{" "}
                   <span className="font-mono text-zinc-100">{party}</span>
                 </p>
                 <p>
-                  <span className="font-semibold">Data:</span>{" "}
+                  <span className="font-semibold">Date:</span>{" "}
                   <span className="font-mono text-zinc-100">{date}</span>
                 </p>
               </div>
 
               <div>
                 <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-                  Orari disponibili
+                  Available times
                 </h3>
 
                 {isLoadingSlots ? (
@@ -1015,22 +1015,21 @@ export default function BookPage() {
                   </div>
                 ) : (
                   <p className="text-sm text-zinc-400">
-                    Nessun orario disponibile per questa selezione. Prova un&apos;altra
-                    data oppure un numero diverso di persone, oppure unisciti alla
-                    waitlist.
+                    No time slots available for this selection. Try another date or a
+                    different number of guests, or join the waitlist.
                   </p>
                 )}
               </div>
 
-              {/* suggerimento waitlist */}
+              {/* waitlist suggestion */}
               {!isLoadingSlots && !anyAvailable && !hasForm && (
                 <div className="mt-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100">
                   <p className="font-semibold text-[0.9rem]">
-                    Nessuna disponibilità per questa data.
+                    No availability for this date.
                   </p>
                   <p className="mt-1 text-[0.8rem] text-amber-100/90">
-                    Puoi unirti alla waitlist e ti avviseremo via email se si libera un
-                    tavolo.
+                    You can join the waitlist and we&apos;ll let you know by email if a
+                    table becomes available.
                   </p>
                 </div>
               )}
@@ -1054,7 +1053,7 @@ export default function BookPage() {
                     });
                     if (res.ok) {
                       alert(
-                        "Sei stato aggiunto alla waitlist. Ti manderemo una email se si libera un tavolo."
+                        "You have been added to the waitlist. We&apos;ll email you if a table opens up."
                       );
                       setShowWaitlist(false);
                       setPickedTime(null);
@@ -1062,19 +1061,19 @@ export default function BookPage() {
                       const { error } = await res
                         .json()
                         .catch(() => ({ error: "Error" }));
-                      alert(error || "Impossibile aggiungerti alla waitlist");
+                      alert(error || "Unable to add you to the waitlist");
                     }
                   }}
                   className="mt-6 max-w-xl space-y-3 rounded-2xl border border-zinc-800 bg-black/50 p-5"
                 >
                   <div className="text-sm text-zinc-200">
-                    <span className="font-semibold">Unisciti alla waitlist</span> per{" "}
-                    <span className="font-mono">{date}</span> • {party} ospiti
+                    <span className="font-semibold">Join the waitlist</span> for{" "}
+                    <span className="font-mono">{date}</span> • {party} guests
                   </div>
 
                   <label className="grid gap-1 text-sm">
                     <span className="text-xs uppercase tracking-[0.18em] text-zinc-400">
-                      Note (opzionale)
+                      Notes (optional)
                     </span>
                     <textarea
                       rows={3}
@@ -1088,19 +1087,19 @@ export default function BookPage() {
                     <button
                       className="rounded-full bg-amber-500 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-amber-400"
                     >
-                      Conferma waitlist
+                      Confirm waitlist
                     </button>
                     <button
                       type="button"
                       className="rounded-full border border-zinc-700 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-100 transition hover:border-amber-400 hover:text-amber-200"
                       onClick={() => setShowWaitlist(false)}
                     >
-                      Annulla
+                      Cancel
                     </button>
                   </div>
 
                   <p className="text-[0.7rem] text-zinc-500">
-                    Ti avviseremo via email se si libera un tavolo in questa data.
+                    We&apos;ll notify you by email if a table opens up on this date.
                   </p>
                 </form>
               )}
@@ -1108,7 +1107,7 @@ export default function BookPage() {
           )}
         </section>
 
-        {/* MODAL con solo note + countdown */}
+        {/* MODAL with notes only + countdown */}
         <HoldModal
           open={modalOpen && !!bookingId && !!expiresAt}
           onClose={releaseHold}
