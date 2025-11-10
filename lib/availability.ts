@@ -54,7 +54,11 @@ export async function getSlots({ dateISO, party, area }: GetSlotsArgs): Promise<
   });
   if (allTables.length === 0) return [];
 
-  const areas = Array.from(new Set(allTables.map((t) => t.area)));
+  // Build area list with a stable priority: prefer INDOOR by default
+  const areas = Array.from(new Set(allTables.map((t) => t.area))).sort((a, b) => {
+    const prio = (x: string) => (x === "INDOOR" ? 0 : 1);
+    return prio(a) - prio(b);
+  });
 
   // Prenotazioni del giorno (finestra ampia) per calcoli occupazione/coperti
   const fetchStart = addMinutes(dayStart, openMins - seatDuration - bufferBefore - 120);
@@ -81,6 +85,7 @@ export async function getSlots({ dateISO, party, area }: GetSlotsArgs): Promise<
 
   const slots: SlotOut[] = [];
 
+  // Require the full seating to finish before close.
   for (let t = openMins; t + seatDuration <= closeMins; t += slotInterval) {
     const start = addMinutes(dayStart, t);
     const end = addMinutes(start, seatDuration);
@@ -135,6 +140,7 @@ export async function getSlots({ dateISO, party, area }: GetSlotsArgs): Promise<
         const total = picked
           .map((id) => free.find((ft) => ft.id === id)?.capacity ?? 0)
           .reduce((acc, n) => acc + n, 0);
+        // Prefer smaller total; on ties, the earlier area in `areas` wins (INDOOR first)
         if (total < bestTotal) {
           bestTotal = total;
           bestArea = a;

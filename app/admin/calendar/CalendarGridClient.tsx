@@ -1,6 +1,6 @@
 "use client";
 
-import { useOptimistic, useTransition } from "react";
+import { useOptimistic, useTransition, useRef, useState, useEffect, type CSSProperties } from "react";
 import { moveBookingAction } from "./actions";
 import { useRouter } from "next/navigation";
 
@@ -14,6 +14,7 @@ type Block = {
   endISO: string;
   label: string;
   status: "PENDING" | "CONFIRMED";
+  partySize: number;
 };
 
 export default function CalendarGridClient({
@@ -31,6 +32,18 @@ export default function CalendarGridClient({
   const [pending, startTransition] = useTransition();
   const [optimisticBlocksByTable, applyOptimistic] =
     useOptimistic(blocksByTable);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const capacityByTable = new Map(tables.map((t) => [t.id, t.capacity]));
+  const [notice, setNotice] = useState<string | null>(null);
+  useEffect(() => {
+    if (!notice) return;
+    const t = setTimeout(() => setNotice(null), 3500);
+    return () => clearTimeout(t);
+  }, [notice]);
+
+  // Allow using CSS variables in inline style without any-casts
+  type GridVars = CSSProperties & { [key in "--slot-count"]: string };
 
   function onDragStart(e: React.DragEvent<HTMLDivElement>, block: Block) {
     e.dataTransfer.setData(
@@ -58,6 +71,24 @@ export default function CalendarGridClient({
       tableId: string;
     };
 
+    // Capacity guard on client: find party size of dragged booking
+    let partySize: number | undefined;
+    outer: for (const arr of Object.values(optimisticBlocksByTable)) {
+      for (const b of arr) {
+        if (b.bookingId === bookingId) {
+          partySize = b.partySize;
+          break outer;
+        }
+      }
+    }
+    const targetCapacity = capacityByTable.get(cell.tableId);
+    if (partySize && targetCapacity && partySize > targetCapacity) {
+      setNotice(
+        `Too many guests for this table: seats ${targetCapacity}, party ${partySize}.`
+      );
+      return;
+    }
+
     // Ottimismo UI
     applyOptimistic((prev) => {
       const next: Record<string, Block[]> = {};
@@ -76,6 +107,7 @@ export default function CalendarGridClient({
         endISO,
         label,
         status: "CONFIRMED",
+        partySize: partySize ?? 1,
       };
       next[cell.tableId] = [...(next[cell.tableId] || []), placeholder];
       return next;
@@ -97,10 +129,53 @@ export default function CalendarGridClient({
             : typeof err === "string"
             ? err
             : "Move failed";
-        alert(message);
+        setNotice(message);
         router.refresh(); // ripristina stato reale
       }
     });
+  }
+
+  // Auto-scroll the grid while dragging near edges
+  function handleDragOverContainer(e: React.DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    const el = scrollRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const threshold = 60; // px from edges
+    const maxSpeed = 20; // px per frame
+
+    let dx = 0;
+    let dy = 0;
+
+    if (x < threshold) dx = -((threshold - x) / threshold) * maxSpeed;
+    else if (x > rect.width - threshold)
+      dx = ((x - (rect.width - threshold)) / threshold) * maxSpeed;
+
+    if (y < threshold) dy = -((threshold - y) / threshold) * maxSpeed;
+    else if (y > rect.height - threshold)
+      dy = ((y - (rect.height - threshold)) / threshold) * maxSpeed;
+
+    if (dx !== 0 || dy !== 0) {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      const step = () => {
+        if (dx) el.scrollLeft += dx;
+        if (dy) el.scrollTop += dy;
+        rafRef.current = requestAnimationFrame(step);
+      };
+      rafRef.current = requestAnimationFrame(step);
+    } else if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+  }
+
+  function stopAutoScroll() {
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
   }
 
   return (
@@ -119,17 +194,32 @@ export default function CalendarGridClient({
         )}
       </div>
 
+      {notice ? (
+        <div className="mb-3 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-200 print:hidden">
+          {notice}
+        </div>
+      ) : null}
+
       {/* Grid wrapper */}
-      <div className="overflow-x-auto rounded-2xl border border-zinc-800 bg-black/40">
-        <div className="min-w-[900px]">
+      <div
+        ref={scrollRef}
+        onDragOver={handleDragOverContainer}
+        onDragEnd={stopAutoScroll}
+        onDrop={stopAutoScroll}
+        className="overflow-x-auto rounded-2xl border border-zinc-800 bg-black/40"
+      >
+        <div
+          className="min-w-[900px] calendar-grid-root"
+          style={{ "--slot-count": String(slots.length) } as GridVars}
+        >
           {/* Header row */}
           <div
-            className="grid"
+            className="grid calendar-grid"
             style={{
               gridTemplateColumns: `160px repeat(${slots.length}, minmax(50px,1fr))`,
             }}
           >
-            <div className="sticky left-0 z-10 border-b border-zinc-800 bg-zinc-950 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-300">
+            <div className="sticky left-0 z-30 border-b border-zinc-800 bg-zinc-950 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-zinc-300">
               Table
             </div>
             {slots.map((s, i) => (
@@ -153,13 +243,13 @@ export default function CalendarGridClient({
             return (
               <div
                 key={t.id}
-                className="grid"
+                className="grid calendar-grid"
                 style={{
                   gridTemplateColumns: `160px repeat(${slots.length}, minmax(50px,1fr))`,
                 }}
               >
                 {/* Table info (sticky) */}
-                <div className="sticky left-0 z-10 border-t border-zinc-800 bg-zinc-950 px-3 py-2 text-xs">
+                <div className="sticky left-0 z-30 border-t border-zinc-800 bg-zinc-950 px-3 py-2 text-xs">
                   <div className="text-sm font-semibold text-zinc-50">
                     {t.code}
                   </div>

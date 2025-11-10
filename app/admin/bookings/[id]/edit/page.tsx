@@ -28,8 +28,27 @@ async function getData(id: string) {
     where: { active: true },
     orderBy: [{ area: "asc" }, { code: "asc" }],
   });
+  // Compute currently busy tables for this booking's time window
+  const rule = await prisma.reservationRule.findFirst();
+  const seatDuration = rule?.seatDuration ?? 90;
+  const bufferBefore = rule?.bufferBefore ?? 0;
+  const bufferAfter = rule?.bufferAfter ?? 0;
+  const start = addMinutes(booking.dateTime, -bufferBefore);
+  const end = addMinutes(booking.dateTime, seatDuration + bufferAfter);
 
-  return { booking, tables };
+  const overlapping = await prisma.booking.findMany({
+    where: {
+      id: { not: id },
+      status: { in: ["PENDING", "CONFIRMED"] },
+      dateTime: { lt: end, gt: addMinutes(start, -seatDuration) },
+    },
+    include: { tables: true },
+  });
+
+  const busyIds = new Set<string>();
+  for (const b of overlapping) for (const t of b.tables) busyIds.add(t.tableId);
+
+  return { booking, tables, busyIds: Array.from(busyIds) };
 }
 
 /* ===========================
@@ -159,7 +178,11 @@ async function updateBookingAction(formData: FormData) {
       msg.includes("nowait") ||
       msg.includes("could not obtain lock")
     ) {
-      throw new Error("Conflict: table already allocated in that time window.");
+      // Redirect back with a friendly error banner
+      const encoded = encodeURIComponent(
+        "That table is already booked at that time. Pick different tables or adjust the time."
+      );
+      redirect(`/admin/bookings/${id}/edit?error=${encoded}`);
     }
     throw err;
   }
@@ -211,21 +234,25 @@ async function cancelBookingAction(id: string) {
 =========================== */
 export default async function EditBookingPage(props: {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ error?: string }>;
 }) {
   await requireRole([Role.OWNER, Role.MANAGER, Role.HOST]);
 
   // 👇 Next ora vuole che `params` sia awaited
   const { id } = await props.params;
+  const sp = props.searchParams ? await props.searchParams : {};
+  const friendlyError = sp?.error;
 
   const data = await getData(id);
   if (!data) notFound();
-  const { booking, tables } = data;
+  const { booking, tables, busyIds } = data;
 
   const d = booking.dateTime;
   const date = d.toISOString().slice(0, 10);
   const time = d.toTimeString().slice(0, 5);
 
   const currentTableIds = new Set(booking.tables.map((bt) => bt.tableId));
+  const busySet = new Set<string>(busyIds ?? []);
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -246,6 +273,11 @@ export default async function EditBookingPage(props: {
 
       {/* Main form card */}
       <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 text-sm text-zinc-200">
+        {friendlyError ? (
+          <div className="mb-4 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+            {friendlyError}
+          </div>
+        ) : null}
         <form action={updateBookingAction} className="space-y-5">
           <input type="hidden" name="id" value={booking.id} />
 
@@ -350,34 +382,44 @@ export default async function EditBookingPage(props: {
               </span>
             </div>
             <div className="grid max-h-64 gap-2 overflow-auto pr-2 md:grid-cols-2">
-              {tables.map((t) => (
-                <label
-                  key={t.id}
-                  className="flex items-center gap-2 text-xs text-zinc-200"
-                >
-                  <input
-                    type="checkbox"
-                    name="tableIds"
-                    value={t.id}
-                    defaultChecked={currentTableIds.has(t.id)}
-                    className="h-3 w-3 accent-amber-500"
-                  />
-                  <span className="inline-flex flex-wrap gap-1">
-                    <span className="font-semibold text-zinc-50">
-                      {t.code}
-                    </span>
-                    <span className="text-zinc-500">{t.area}</span>
-                    <span className="text-zinc-500">
-                      {t.capacity} seats
-                    </span>
-                    {t.mergeGroup ? (
-                      <span className="text-zinc-600">
-                        [{t.mergeGroup}]
+              {tables.map((t) => {
+                const isAssigned = currentTableIds.has(t.id);
+                const isBusy = !isAssigned && busySet.has(t.id);
+                return (
+                  <label
+                    key={t.id}
+                    className={
+                      "flex items-center gap-2 text-xs " +
+                      (isBusy ? "text-zinc-500 opacity-60 cursor-not-allowed" : "text-zinc-200")
+                    }
+                    title={isBusy ? "Unavailable at this time" : undefined}
+                  >
+                    <input
+                      type="checkbox"
+                      name="tableIds"
+                      value={t.id}
+                      defaultChecked={isAssigned}
+                      disabled={isBusy}
+                      className="h-3 w-3 accent-amber-500"
+                    />
+                    <span className="inline-flex flex-wrap items-center gap-1">
+                      <span className="font-semibold text-zinc-50">
+                        {t.code}
                       </span>
-                    ) : null}
-                  </span>
-                </label>
-              ))}
+                      <span className="text-zinc-500">{t.area}</span>
+                      <span className="text-zinc-500">{t.capacity} seats</span>
+                      {t.mergeGroup ? (
+                        <span className="text-zinc-600">[{t.mergeGroup}]</span>
+                      ) : null}
+                      {isBusy ? (
+                        <span className="ml-1 rounded bg-red-500/15 px-2 py-[2px] text-[10px] font-medium text-red-300">
+                          unavailable
+                        </span>
+                      ) : null}
+                    </span>
+                  </label>
+                );
+              })}
             </div>
             <p className="mt-2 text-[0.7rem] text-zinc-500">
               If you don’t select any tables, the system will try to

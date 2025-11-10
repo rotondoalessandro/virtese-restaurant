@@ -29,8 +29,8 @@ export function pickTables(
     group.sort((a, b) => a.capacity - b.capacity);
 
     // limitiamo la ricerca combinatoria
-    const MAX_IN_GROUP = 6;     // massimo tavoli considerati per gruppo
-    const MAX_TABLES_MERGED = 4; // massimo tavoli combinabili
+    const MAX_IN_GROUP = 8;      // massimo tavoli considerati per gruppo
+    const MAX_TABLES_MERGED = 6; // massimo tavoli combinabili
     const items = group.slice(0, MAX_IN_GROUP);
 
     function dfs(idx: number, sum: number, ids: string[]) {

@@ -4,8 +4,8 @@ import { useEffect } from "react";
 
 export default function HoldModal({
   open,
-  onClose,         // chiude + rilascia hold (lo fai nel parent)
-  onConfirm,       // chiama POST /api/book (lo fai nel parent)
+  onClose, // chiude + rilascia hold (lo fai nel parent)
+  onConfirm, // chiama POST /api/book (lo fai nel parent)
   mm,
   ss,
   date,
@@ -44,27 +44,26 @@ export default function HoldModal({
     <div
       aria-modal="true"
       role="dialog"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
     >
       {/* Click fuori per chiudere */}
-      <button
-        type="button"
-        className="absolute inset-0 cursor-default"
+      <div
+        className="absolute inset-0"
         onClick={onClose}
-        aria-label="Close"
+        aria-hidden="true"
       />
 
       {/* Card */}
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-zinc-800 bg-black/90 px-5 py-6 text-zinc-50 shadow-2xl sm:px-6 sm:py-7">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="font-display text-lg font-semibold">
+      <div className="relative z-10 w-full max-w-lg rounded-3xl border border-[#e1d6c9] bg-white/98 px-6 py-7 text-[#5b4b41] shadow-2xl sm:px-8 sm:py-8">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="font-display text-xl sm:text-2xl text-[#3f3127]">
             Confirm your booking
           </h2>
-          <div className="flex items-center gap-2">
-            <span className="text-[0.7rem] uppercase tracking-[0.2em] text-zinc-500">
+          <div className="flex items-center justify-between gap-3 sm:justify-end">
+            <span className="text-[0.75rem] uppercase tracking-[0.22em] text-[#8a7463]">
               Hold time
             </span>
-            <div className="flex items-center gap-1 rounded-full border border-amber-400/60 bg-amber-500/10 px-3 py-1 font-mono text-xs text-amber-200">
+            <div className="flex items-center gap-2 rounded-full border border-[#beafa1] bg-[#f8f2ea] px-3 py-1.5 font-mono text-xs text-[#5b4b41]">
               ⏳
               <span>
                 {mm}:{ss}
@@ -73,7 +72,7 @@ export default function HoldModal({
           </div>
         </div>
 
-        <p className="mt-3 text-sm text-zinc-200">
+        <p className="mt-4 text-sm sm:text-base text-[#5b4b41]">
           <b>{date}</b> at <b>{time}</b> • {party} guests{" "}
           {areaLabel ? (
             <>
@@ -81,35 +80,35 @@ export default function HoldModal({
             </>
           ) : null}
         </p>
-        <p className="mt-1 text-xs text-zinc-400">
-          We’re holding this table briefly while you confirm your reservation or add
-          any notes.
+        <p className="mt-2 text-[0.85rem] text-[#8a7463]">
+          Stiamo tenendo questo tavolo per te mentre confermi la prenotazione o
+          aggiungi eventuali note.
         </p>
 
         <form
-          className="mt-5 grid gap-3"
+          className="mt-5 grid gap-4"
           onSubmit={async (e) => {
             e.preventDefault();
             await onConfirm();
           }}
         >
           <label className="grid gap-1 text-sm">
-            <span className="text-xs font-medium uppercase tracking-[0.18em] text-zinc-400">
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-[#8a7463]">
               Notes (optional)
             </span>
             <textarea
-              rows={3}
-              className="rounded-md border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-amber-400"
+              rows={4}
+              className="rounded-2xl border border-[#e1d6c9] bg-white px-4 py-2.5 text-sm text-[#5b4b41] placeholder-[#b19c88] outline-none transition focus:border-[#5b4b41]"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Allergie, preferenze di tavolo, occasioni speciali..."
             />
           </label>
 
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-2 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <button
               type="submit"
-              className="rounded-full bg-amber-500 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full sm:w-auto rounded-full bg-[#5b4b41] px-8 py-2.75 text-xs font-semibold uppercase tracking-[0.2em] text-[#f5ede4] transition hover:bg-[#46362c] disabled:cursor-not-allowed disabled:opacity-60"
               disabled={!!isConfirming}
             >
               {isConfirming ? "Confirming…" : "Confirm reservation"}
@@ -117,15 +116,15 @@ export default function HoldModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border border-zinc-700 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-100 transition hover:border-amber-400 hover:text-amber-200"
+              className="w-full sm:w-auto rounded-full border border-[#e1d6c9] px-8 py-2.75 text-xs font-semibold uppercase tracking-[0.2em] text-[#5b4b41] transition hover:border-[#5b4b41]"
             >
               Cancel
             </button>
           </div>
 
-          <p className="mt-3 text-[0.7rem] text-zinc-500">
-            If you close this window or the timer runs out, your hold will be released
-            and the table may be given to someone else.
+          <p className="mt-3 text-[0.75rem] text-[#8a7463]">
+            Se chiudi questa finestra o il timer arriva a zero, il tavolo verrà
+            rilasciato e potrebbe essere assegnato ad altri ospiti.
           </p>
         </form>
       </div>

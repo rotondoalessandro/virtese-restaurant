@@ -13,6 +13,7 @@ const FormSchema = z.object({
   party: z.coerce.number().min(1),
   area: z.string().optional(),
   name: z.string().min(1),
+  surname: z.string().optional().or(z.literal("")),
   email: z.string().email().optional().or(z.literal("")),
   phone: z.string().optional().or(z.literal("")),
   notes: z.string().optional().or(z.literal("")),
@@ -25,7 +26,7 @@ async function createBookingAction(formData: FormData) {
   const parsed = FormSchema.safeParse(raw);
   if (!parsed.success) throw new Error("Invalid form");
 
-  const { date, time, party, area, name, email, phone, notes } = parsed.data;
+  const { date, time, party, area, name, surname, email, phone, notes } = parsed.data;
   const dt = new Date(`${date}T${time}:00`);
 
   const rule = await prisma.reservationRule.findFirst();
@@ -64,15 +65,23 @@ async function createBookingAction(formData: FormData) {
 
   const free = candidates.filter((t) => !busy.has(t.id));
   const picked = pickTables(free, party);
-  if (!picked) throw new Error("No availability for selected time");
+  if (!picked) {
+    const message = "No availability for the selected time and party size.";
+    const encoded = encodeURIComponent(message);
+    redirect(`/admin/bookings/new?error=${encoded}`);
+  }
 
+  // Always persist a customer so the booking shows a name,
+  // even when email/phone are omitted.
   const customer = email || phone
     ? await prisma.customer.upsert({
         where: { email: email || `anon-${Date.now()}@example.local` },
-        update: { name, phone: phone || undefined },
-        create: { name, email: email || null, phone: phone || null },
+        update: { name, surname: surname || undefined, phone: phone || undefined },
+        create: { name, surname: surname || null, email: email || null, phone: phone || null },
       })
-    : null;
+    : await prisma.customer.create({
+        data: { name, surname: surname || null, email: null, phone: null },
+      });
 
   const booking = await prisma.booking.create({
     data: {
@@ -82,8 +91,11 @@ async function createBookingAction(formData: FormData) {
       area: (area || null) as Prisma.BookingCreateInput["area"],
       status: "CONFIRMED",
       notes: notes || null,
-      customerId: customer?.id,
-      tables: { create: picked.map((id) => ({ tableId: id })) },
+      customerId: customer.id,
+      // Include allocation window to satisfy no-overlap constraint
+      tables: {
+        create: picked.map((id) => ({ tableId: id, start_at: start, end_at: end })),
+      },
     },
   });
 
@@ -91,8 +103,15 @@ async function createBookingAction(formData: FormData) {
   redirect(`/admin/bookings/${booking.id}/edit`);
 }
 
-export default async function NewBookingPage() {
+export default async function NewBookingPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ error?: string }>;
+}) {
   await requireRole([Role.OWNER, Role.MANAGER, Role.HOST]);
+
+  const sp = searchParams ? await searchParams : {};
+  const friendlyError = sp?.error;
 
   const tables = await prisma.table.findMany({
     where: { active: true },
@@ -123,6 +142,11 @@ export default async function NewBookingPage() {
 
       {/* Form card */}
       <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 text-sm text-zinc-200">
+        {friendlyError ? (
+          <div className="mb-4 rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-200">
+            {friendlyError}
+          </div>
+        ) : null}
         <form action={createBookingAction} className="grid gap-5 md:grid-cols-2">
           {/* Service details */}
           <div className="space-y-3">
@@ -203,6 +227,17 @@ export default async function NewBookingPage() {
                   className="h-9 rounded-xl border border-zinc-700 bg-black/40 px-3 text-xs text-zinc-100 outline-none ring-0 placeholder:text-zinc-500 focus:border-amber-400 focus:ring-1 focus:ring-amber-400/60"
                   placeholder="Customer name"
                   required
+                />
+              </label>
+
+              <label className="flex flex-col gap-1">
+                <span className="text-[0.7rem] uppercase tracking-[0.2em] text-zinc-500">
+                  Surname
+                </span>
+                <input
+                  name="surname"
+                  className="h-9 rounded-xl border border-zinc-700 bg-black/40 px-3 text-xs text-zinc-100 outline-none ring-0 placeholder:text-zinc-500 focus:border-amber-400 focus:ring-1 focus:ring-amber-400/60"
+                  placeholder="(optional)"
                 />
               </label>
 

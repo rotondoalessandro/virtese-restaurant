@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import HoldModal from "./HoldModal";
 
 import {
@@ -24,6 +25,8 @@ function isValidEmail(v: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 }
 
+/* ---------------- CALENDAR ---------------- */
+
 function Calendar({
   value,
   onChange,
@@ -41,11 +44,26 @@ function Calendar({
   const min = new Date(minDate + "T00:00:00");
   const today = new Date();
 
+  // Map of YYYY-MM-DD -> { closed, openTime, closeTime }
+  const [closedMap, setClosedMap] = useState<
+    Record<string, { closed: boolean; openTime?: string; closeTime?: string }>
+  >({});
+
   const monthLabel = format(currentMonth, "MMMM yyyy", { locale: it });
+
+  // helper to format YYYY-MM-DD in local time
+  const ymd = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const da = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${da}`;
+  };
 
   // week starting on Monday
   const start = startOfWeek(startOfMonth(currentMonth), { weekStartsOn: 1 });
   const end = endOfWeek(endOfMonth(currentMonth), { weekStartsOn: 1 });
+  const rangeFrom = ymd(start);
+  const rangeTo = ymd(end);
 
   const weeks: Date[][] = [];
   let day = start;
@@ -59,6 +77,26 @@ function Calendar({
     weeks.push(week);
   }
 
+  // Fetch open/closed info for the displayed range
+  useEffect(() => {
+    const from = rangeFrom;
+    const to = rangeTo;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/opening/range?from=${from}&to=${to}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setClosedMap((data?.days as typeof closedMap) || {});
+      } catch {
+        if (!cancelled) setClosedMap({});
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [rangeFrom, rangeTo]);
+
   const canGoPrev =
     currentMonth.getFullYear() > min.getFullYear() ||
     (currentMonth.getFullYear() === min.getFullYear() &&
@@ -70,31 +108,33 @@ function Calendar({
   };
 
   return (
-    <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-950/70 p-4 shadow-lg">
+    <div className="w-full max-w-md mx-auto rounded-2xl border border-[#e1d6c9] bg-white p-4 shadow-sm">
       {/* Month header */}
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <button
           type="button"
           onClick={() => canGoPrev && setCurrentMonth(addMonths(currentMonth, -1))}
           disabled={!canGoPrev}
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-700/80 text-xs text-zinc-300 transition hover:border-amber-400 hover:text-amber-200 disabled:cursor-not-allowed disabled:opacity-30"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e1d6c9] bg-[#f8f2ea] text-base text-[#5b4b41] transition hover:bg-[#e1d6c9] disabled:cursor-not-allowed disabled:opacity-40"
+          aria-label="Previous month"
         >
           ‹
         </button>
-        <div className="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-200">
+        <div className="text-sm sm:text-base font-semibold uppercase tracking-[0.2em] text-[#5b4b41]">
           {monthLabel}
         </div>
         <button
           type="button"
           onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
-          className="flex h-8 w-8 items-center justify-center rounded-full border border-zinc-700/80 text-xs text-zinc-300 transition hover:border-amber-400 hover:text-amber-200"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e1d6c9] bg-[#f8f2ea] text-base text-[#5b4b41] transition hover:bg-[#e1d6c9]"
+          aria-label="Next month"
         >
           ›
         </button>
       </div>
 
       {/* Weekdays */}
-      <div className="mb-1 grid grid-cols-7 text-center text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+      <div className="mb-2 grid grid-cols-7 text-center text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#8a7463]">
         <span>Mon</span>
         <span>Tue</span>
         <span>Wed</span>
@@ -108,30 +148,37 @@ function Calendar({
       <div className="grid grid-cols-7 gap-1.5 text-sm">
         {weeks.map((week, wi) =>
           week.map((d, di) => {
-            const isDisabled = isBefore(d, min);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(
+              2,
+              "0"
+            )}-${String(d.getDate()).padStart(2, "0")}`;
+            const closed = !!closedMap[key]?.closed;
+            const minDisabled = isBefore(d, min);
+            const isDisabled = minDisabled || closed;
             const isSelected = !!selectedDate && isSameDay(d, selectedDate);
             const isToday = isSameDay(d, today);
             const inCurrentMonth = d.getMonth() === currentMonth.getMonth();
 
             const base =
-              "flex h-9 w-9 items-center justify-center rounded-full border text-xs transition-colors duration-150 focus-visible:outline-none";
+              "flex h-10 w-10 items-center justify-center rounded-full border text-sm transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5b4b41]/70";
 
             let style = "";
 
             if (isSelected) {
-              // 🔥 selected = solid orange ALWAYS
               style =
-                "border-amber-400 bg-amber-400 text-black shadow-[0_0_0_1px_rgba(251,191,36,0.4)] hover:bg-amber-400 hover:border-amber-400";
-            } else if (isDisabled) {
-              style = "border-zinc-800 bg-zinc-950 text-zinc-600 opacity-30 cursor-not-allowed";
+                "border-[#5b4b41] bg-[#5b4b41] text-[#f5ede4] shadow-[0_0_0_1px_rgba(0,0,0,0.15)]";
+            } else if (minDisabled) {
+              style =
+                "border-[#e1d6c9] bg-[#f8f2ea] text-[#c4b1a0] cursor-not-allowed";
+            } else if (closed) {
+              style =
+                "border-[#f0b3b3] bg-[#fdeaea] text-[#b64848] cursor-not-allowed flex-col";
             } else {
               style = inCurrentMonth
-                ? "border-zinc-700 bg-zinc-900 text-zinc-100 hover:border-amber-400 hover:bg-amber-500/20 hover:text-amber-100"
-                : "border-zinc-900 bg-zinc-950 text-zinc-600";
-
-              // today (only if not selected)
-              if (isToday) {
-                style += " ring-1 ring-amber-400/60";
+                ? "border-[#e1d6c9] bg-white text-[#5b4b41] hover:bg-[#f8f2ea]"
+                : "border-transparent bg-transparent text-[#c4b1a0]";
+              if (isToday && !isSelected) {
+                style += " ring-1 ring-[#beafa1]";
               }
             }
 
@@ -141,31 +188,58 @@ function Calendar({
                 type="button"
                 disabled={isDisabled}
                 onClick={() => handleSelect(d)}
+                title={
+                  closed
+                    ? "Closed"
+                    : format(d, "dd MMMM yyyy", { locale: it })
+                }
                 className={`${base} ${style}`}
               >
-                {d.getDate()}
+                <span className="leading-none">{d.getDate()}</span>
+                {closed ? (
+                  <span className="mt-0.5 text-[8px] uppercase tracking-[0.18em]">
+                    closed
+                  </span>
+                ) : null}
               </button>
             );
           })
         )}
       </div>
 
-      {/* Legend */}
-      <div className="mt-3 flex items-center gap-3 text-[0.7rem] text-zinc-500">
-        <div className="flex items-center gap-1.5">
-          <span className="inline-flex h-3 w-3 rounded-full border border-amber-400 bg-amber-400" />
-          <span>Selected date</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <span className="inline-flex h-3 w-3 rounded-full border border-zinc-600" />
-          <span>Available</span>
-        </div>
+      {/* Opening info */}
+      <div className="mt-3 text-xs text-center text-[#8a7463]">
+        {selectedDate ? (
+          (() => {
+            const key = `${selectedDate.getFullYear()}-${String(
+              selectedDate.getMonth() + 1
+            ).padStart(2, "0")}-${String(selectedDate.getDate()).padStart(
+              2,
+              "0"
+            )}`;
+            const info = closedMap[key];
+            if (!info) return null;
+            if (info.closed) return <span>Closed</span>;
+            if (info.openTime && info.closeTime)
+              return (
+                <span>
+                  Open {info.openTime}–{info.closeTime}
+                </span>
+              );
+            return null;
+          })()
+        ) : (
+          <span>Select a date to see opening hours.</span>
+        )}
       </div>
     </div>
   );
 }
 
+/* ---------------- MAIN BOOKING PAGE ---------------- */
+
 export default function BookPage() {
+  const router = useRouter();
   const [step, setStep] = useState<Step>(1);
 
   // customer data
@@ -335,7 +409,9 @@ export default function BookPage() {
 
     if (!resHold.ok) {
       setIsHolding(false);
-      const { error } = await resHold.json().catch(() => ({ error: "Hold failed" }));
+      const { error } = await resHold
+        .json()
+        .catch(() => ({ error: "Hold failed" }));
       const join = window.confirm(
         (error || "No availability at this time.") +
           "\nJoin the waitlist for this date?"
@@ -380,35 +456,18 @@ export default function BookPage() {
 
     if (!res.ok) {
       setIsConfirming(false);
-      const { error } = await res.json().catch(() => ({ error: "Booking failed" }));
+      const { error } = await res
+        .json()
+        .catch(() => ({ error: "Booking failed" }));
       alert(error || "Booking failed");
       return;
     }
 
-    alert("Reservation confirmed! Check your email for details.");
-
-    // minimal UI reset
+    // Clear local hold state and redirect to thank-you page
     setPickedTime(null);
     clearHoldState();
-
-    // refresh availability if we're still on step 7
-    if (step === 7) {
-      try {
-        setIsLoadingSlots(true);
-        setSlots([]);
-        const params = new URLSearchParams({
-          date,
-          party: String(party),
-        });
-        const r = await fetch(`/api/availability?${params.toString()}`);
-        const { slots } = await r.json();
-        setSlots(slots || []);
-      } catch {
-        setSlots([]);
-      } finally {
-        setIsLoadingSlots(false);
-      }
-    }
+    setIsConfirming(false);
+    router.push("/thank-you");
   }
 
   const mm = Math.floor(secondsLeft / 60)
@@ -422,7 +481,7 @@ export default function BookPage() {
   const stepLabel = (s: Step) => {
     switch (s) {
       case 1:
-        return "Name and surname";
+        return "Name";
       case 2:
         return "Phone";
       case 3:
@@ -477,104 +536,109 @@ export default function BookPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#050505] text-zinc-50">
-      <div className="mx-auto max-w-6xl px-4 pb-20 pt-24 sm:px-6 lg:px-0">
-        <header className="max-w-2xl">
-          <p className="text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-zinc-500">
+    <main className="min-h-screen bg-[#f8f2ea] text-[#5b4b41]">
+      <div className="mx-auto max-w-3xl px-4 pb-20 pt-16 sm:px-6 lg:px-0">
+        {/* HEADER */}
+        <header className="text-center">
+          <p className="text-[0.8rem] font-semibold uppercase tracking-[0.3em] text-[#8a7463]">
             Reservations
           </p>
-          <h1 className="mt-3 font-display text-3xl sm:text-4xl">Reserve a table</h1>
-          <p className="mt-3 text-sm leading-relaxed text-zinc-300">
-            We&apos;ll guide you through a few quick steps to book your table. Your
-            selection will be held briefly while you confirm.
+          <h1 className="mt-3 font-display text-3xl sm:text-4xl text-[#3f3127]">
+            Reserve a table
+          </h1>
+          <p className="mt-4 text-sm sm:text-base leading-relaxed text-[#5b4b41] max-w-xl mx-auto">
+            Ti guidiamo in pochi passaggi: lascia i tuoi dati, scegli il numero di
+            persone, la data e l’orario. Il tavolo viene tenuto in blocco mentre
+            confermi.
           </p>
         </header>
 
-        {/* Stepper with clickable dots (backwards) */}
-        <div className="mt-6 flex flex-wrap items-center gap-3 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-zinc-500">
-          {steps.map((s, idx) => {
+        {/* STEPPER */}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-4 text-[0.75rem] font-semibold uppercase tracking-[0.18em] text-[#8a7463]">
+          {steps.map((s) => {
             const isCurrent = step === s;
             const isCompleted = s < step;
+
             return (
-              <div key={s} className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={
-                    isCompleted
-                      ? () => setStep(s)
-                      : undefined
-                  }
-                  className="focus-visible:outline-none"
+              <button
+                key={s}
+                type="button"
+                onClick={isCompleted ? () => setStep(s) : undefined}
+                className="flex flex-col items-center gap-1 focus-visible:outline-none"
+              >
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-full border text-sm transition
+                    ${
+                      isCurrent
+                        ? "border-[#5b4b41] bg-[#5b4b41] text-[#f5ede4]"
+                        : isCompleted
+                        ? "border-[#5b4b41] bg-[#f8f2ea] text-[#5b4b41]"
+                        : "border-[#e1d6c9] bg-white text-[#b19c88]"
+                    }`}
                 >
-                  <div
-                    className={`flex h-6 w-6 items-center justify-center rounded-full border text-[0.7rem] transition
-                      ${
-                        isCurrent
-                          ? "border-amber-400 bg-amber-400 text-black"
-                          : isCompleted
-                          ? "border-emerald-500 bg-emerald-500/10 text-emerald-300"
-                          : "border-zinc-700 bg-zinc-900 text-zinc-400"
-                      }`}
-                  >
-                    {isCompleted ? "✓" : s}
-                  </div>
-                </button>
-                <span className="hidden text-[0.65rem] text-zinc-400 sm:inline">
+                  {isCompleted ? "✓" : s}
+                </div>
+                <span className="text-[0.65rem] text-[#8a7463]">
                   {stepLabel(s)}
                 </span>
-                {idx < steps.length - 1 && (
-                  <div className="hidden h-px w-6 bg-zinc-700/70 sm:block" />
-                )}
-              </div>
+              </button>
             );
           })}
         </div>
 
-        <section className="mt-6 rounded-2xl border border-zinc-800 bg-black/40 p-5 sm:p-6">
+        {/* STEP CARD */}
+        <section className="mt-8 rounded-3xl border border-[#e1d6c9] bg-white/95 p-6 sm:p-8 shadow-sm">
           {/* STEP 1 – Name and surname */}
           {step === 1 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-400">
+            <div className="space-y-6 max-w-md mx-auto">
+              <div className="text-center space-y-2">
+                <h2 className="text-sm sm:text-base font-semibold uppercase tracking-[0.2em] text-[#8a7463]">
                   Step 1 · Name and surname
                 </h2>
-                <p className="mt-2 text-sm text-zinc-300">
-                  Start by leaving us your first and last name for the reservation.
+                <p className="text-sm sm:text-base text-[#5b4b41]">
+                  Inizia lasciando nome e cognome per la prenotazione.
                 </p>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2 sm:max-w-xl">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <label className="grid gap-1 text-sm">
-                  <span className="text-xs uppercase tracking-[0.18em] text-zinc-400">
+                  <span className="text-xs uppercase tracking-[0.18em] text-[#8a7463]">
                     First name
                   </span>
                   <input
-                    className="rounded-md border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-amber-400"
+                    className="rounded-full border border-[#e1d6c9] bg-white px-4 py-2.5 text-sm text-[#5b4b41] placeholder-[#b19c88] outline-none transition focus:border-[#5b4b41]"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="E.g. Mario"
+                    placeholder="Mario"
                   />
                 </label>
 
                 <label className="grid gap-1 text-sm">
-                  <span className="text-xs uppercase tracking-[0.18em] text-zinc-400">
+                  <span className="text-xs uppercase tracking-[0.18em] text-[#8a7463]">
                     Last name
                   </span>
                   <input
-                    className="rounded-md border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-amber-400"
+                    className="rounded-full border border-[#e1d6c9] bg:white px-4 py-2.5 text-sm text-[#5b4b41] placeholder-[#b19c88] outline-none transition focus:border-[#5b4b41]"
                     value={surname}
                     onChange={(e) => setSurname(e.target.value)}
-                    placeholder="E.g. Rossi"
+                    placeholder="Rossi"
                   />
                 </label>
               </div>
 
-              <div className="flex justify-end">
+              <div className="mt-4 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  disabled
+                  className="rounded-full border border-transparent px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#c4b1a0] cursor-not-allowed"
+                >
+                  Back
+                </button>
                 <button
                   type="button"
                   onClick={goNext}
                   disabled={!canGoNext(1)}
-                  className="rounded-full bg-amber-500 px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full sm:w-auto rounded-full bg-[#5b4b41] px-8 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#f5ede4] transition hover:bg-[#46362c] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Continue
                 </button>
@@ -584,34 +648,34 @@ export default function BookPage() {
 
           {/* STEP 2 – Phone */}
           {step === 2 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-400">
+            <div className="space-y-6 max-w-md mx-auto">
+              <div className="text-center space-y-2">
+                <h2 className="text-sm sm:text-base font-semibold uppercase tracking-[0.2em] text-[#8a7463]">
                   Step 2 · Phone number
                 </h2>
-                <p className="mt-2 text-sm text-zinc-300">
-                  Enter a phone number for any communications about your reservation.
+                <p className="text-sm sm:text-base text-[#5b4b41]">
+                  Lascia un numero di telefono per eventuali comunicazioni sulla
+                  prenotazione.
                 </p>
               </div>
 
-              <div className="rounded-xl border border-zinc-800 bg-black/40 p-4 text-sm text-zinc-300">
+              <div className="rounded-2xl border border-[#e1d6c9] bg-[#f8f2ea]/70 p-4 text-sm text-[#5b4b41]">
                 <p>
                   <span className="font-semibold">Name:</span>{" "}
-                  <span className="font-mono text-zinc-100">{displayName || "—"}</span>
+                  <span className="font-mono">{displayName || "—"}</span>
                 </p>
               </div>
 
-              <label className="grid gap-1 text-sm sm:max-w-xs">
-                <span className="text-xs uppercase tracking-[0.18em] text-zinc-400">
+              <label className="grid gap-1 text-sm">
+                <span className="text-xs uppercase tracking-[0.18em] text-[#8a7463]">
                   Phone
                 </span>
                 <input
                   type="tel"
-                  className="rounded-md border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-amber-400"
+                  className="rounded-full border border-[#e1d6c9] bg-white px-4 py-2.5 text-sm text-[#5b4b41] placeholder-[#b19c88] outline-none transition focus:border-[#5b4b41]"
                   value={phone}
                   onChange={(e) => {
                     const value = e.target.value;
-                    // Allow only digits and '+' at the beginning
                     if (/^[+0-9]*$/.test(value)) {
                       setPhone(value);
                     }
@@ -620,11 +684,11 @@ export default function BookPage() {
                 />
               </label>
 
-              <div className="flex items-center justify-between">
+              <div className="mt-4 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <button
                   type="button"
                   onClick={goBack}
-                  className="rounded-full border border-zinc-700 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-100 transition hover:border-amber-400 hover:text-amber-200"
+                  className="w-full sm:w-auto rounded-full border border-[#e1d6c9] px-8 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#5b4b41] transition hover:border-[#5b4b41]"
                 >
                   Back
                 </button>
@@ -632,7 +696,7 @@ export default function BookPage() {
                   type="button"
                   onClick={goNext}
                   disabled={!canGoNext(2)}
-                  className="rounded-full bg-amber-500 px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full sm:w-auto rounded-full bg-[#5b4b41] px-8 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#f5ede4] transition hover:bg-[#46362c] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Continue
                 </button>
@@ -642,51 +706,50 @@ export default function BookPage() {
 
           {/* STEP 3 – Email */}
           {step === 3 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-400">
+            <div className="space-y-6 max-w-md mx-auto">
+              <div className="text-center space-y-2">
+                <h2 className="text-sm sm:text-base font-semibold uppercase tracking-[0.2em] text-[#8a7463]">
                   Step 3 · Email
                 </h2>
-                <p className="mt-2 text-sm text-zinc-300">
-                  We&apos;ll use this email to send you the confirmation and details of
-                  your reservation.
+                <p className="text-sm sm:text-base text-[#5b4b41]">
+                  Useremo questa email per inviarti la conferma della prenotazione.
                 </p>
               </div>
 
-              <div className="rounded-xl border border-zinc-800 bg-black/40 p-4 text-sm text-zinc-300">
+              <div className="rounded-2xl border border-[#e1d6c9] bg-[#f8f2ea]/70 p-4 text-sm text-[#5b4b41] space-y-1">
                 <p>
                   <span className="font-semibold">Name:</span>{" "}
-                  <span className="font-mono text-zinc-100">{displayName || "—"}</span>
+                  <span className="font-mono">{displayName || "—"}</span>
                 </p>
-                <p className="mt-1">
+                <p>
                   <span className="font-semibold">Phone:</span>{" "}
-                  <span className="font-mono text-zinc-100">{phone || "—"}</span>
+                  <span className="font-mono">{phone || "—"}</span>
                 </p>
               </div>
 
-              <label className="grid gap-1 text-sm sm:max-w-md">
-                <span className="text-xs uppercase tracking-[0.18em] text-zinc-400">
+              <label className="grid gap-1 text-sm">
+                <span className="text-xs uppercase tracking-[0.18em] text-[#8a7463]">
                   Email
                 </span>
                 <input
                   type="email"
-                  className="rounded-md border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-amber-400"
+                  className="rounded-full border border-[#e1d6c9] bg-white px-4 py-2.5 text-sm text-[#5b4b41] placeholder-[#b19c88] outline-none transition focus:border-[#5b4b41]"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="example@email.com"
                 />
                 {email && !isValidEmail(email) && (
-                  <span className="mt-1 text-[0.75rem] text-red-400">
+                  <span className="mt-1 text-[0.8rem] text-red-500">
                     Please enter a valid email address.
                   </span>
                 )}
               </label>
 
-              <div className="flex items-center justify-between">
+              <div className="mt-4 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <button
                   type="button"
                   onClick={goBack}
-                  className="rounded-full border border-zinc-700 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-100 transition hover:border-amber-400 hover:text-amber-200"
+                  className="w-full sm:w-auto rounded-full border border-[#e1d6c9] px-8 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#5b4b41] transition hover:border-[#5b4b41]"
                 >
                   Back
                 </button>
@@ -694,7 +757,7 @@ export default function BookPage() {
                   type="button"
                   onClick={goNext}
                   disabled={!canGoNext(3)}
-                  className="rounded-full bg-amber-500 px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full sm:w-auto rounded-full bg-[#5b4b41] px-8 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#f5ede4] transition hover:bg-[#46362c] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Continue
                 </button>
@@ -704,101 +767,101 @@ export default function BookPage() {
 
           {/* STEP 4 – Terms and conditions */}
           {step === 4 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-400">
+            <div className="space-y-6 max-w-md mx-auto">
+              <div className="text-center space-y-2">
+                <h2 className="text-sm sm:text-base font-semibold uppercase tracking-[0.2em] text-[#8a7463]">
                   Step 4 · Terms and conditions
                 </h2>
-                <p className="mt-2 text-sm text-zinc-300">
-                  Manage consents for the processing of your personal data.
+                <p className="text-sm sm:text-base text-[#5b4b41]">
+                  Gestisci i consensi per il trattamento dei tuoi dati personali.
                 </p>
               </div>
 
-              <div className="rounded-xl border border-zinc-800 bg-black/40 p-4 text-sm text-zinc-300 space-y-1">
+              <div className="rounded-2xl border border-[#e1d6c9] bg-[#f8f2ea]/70 p-4 text-sm text-[#5b4b41] space-y-1">
                 <p>
                   <span className="font-semibold">Name:</span>{" "}
-                  <span className="font-mono text-zinc-100">{displayName || "—"}</span>
+                  <span className="font-mono">{displayName || "—"}</span>
                 </p>
                 <p>
                   <span className="font-semibold">Phone:</span>{" "}
-                  <span className="font-mono text-zinc-100">{phone || "—"}</span>
+                  <span className="font-mono">{phone || "—"}</span>
                 </p>
                 <p>
                   <span className="font-semibold">Email:</span>{" "}
-                  <span className="font-mono text-zinc-100">{email || "—"}</span>
+                  <span className="font-mono">{email || "—"}</span>
                 </p>
               </div>
 
               <div className="space-y-3 text-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-400">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a7463]">
                   Terms and conditions
                 </p>
-                <p className="text-[0.8rem] text-zinc-400">
-                  I consent to the use of my data for:
+                <p className="text-[0.85rem] text-[#5b4b41]">
+                  Acconsento all’utilizzo dei miei dati per:
                 </p>
 
                 <label className="flex items-start gap-2 text-sm">
                   <input
                     type="checkbox"
-                    className="mt-[3px] h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-amber-500"
+                    className="mt-[3px] h-4 w-4 rounded border-[#e1d6c9] text-[#5b4b41]"
                     checked={consentMarketing}
                     onChange={(e) => setConsentMarketing(e.target.checked)}
                   />
                   <span>
-                    Marketing and communications consent{" "}
-                    <span className="text-xs text-zinc-500">Details</span>
+                    Marketing e comunicazioni{" "}
+                    <span className="text-xs text-[#8a7463]">Facoltativo</span>
                   </span>
                 </label>
 
                 <label className="flex items-start gap-2 text-sm">
                   <input
                     type="checkbox"
-                    className="mt-[3px] h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-amber-500"
+                    className="mt-[3px] h-4 w-4 rounded border-[#e1d6c9] text-[#5b4b41]"
                     checked={consentProfiling}
                     onChange={(e) => setConsentProfiling(e.target.checked)}
                   />
                   <span>
-                    Profiling consent{" "}
-                    <span className="text-xs text-zinc-500">Details</span>
+                    Profilazione{" "}
+                    <span className="text-xs text-[#8a7463]">Facoltativo</span>
                   </span>
                 </label>
 
                 <label className="flex items-start gap-2 text-sm">
                   <input
                     type="checkbox"
-                    className="mt-[3px] h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-amber-500"
+                    className="mt-[3px] h-4 w-4 rounded border-[#e1d6c9] text-[#5b4b41]"
                     checked={consentPrivacy}
                     onChange={(e) => setConsentPrivacy(e.target.checked)}
                   />
                   <span>
-                    Privacy and data processing{" "}
-                    <span className="text-red-400">*</span>{" "}
-                    <span className="text-xs text-zinc-500">Details</span>
+                    Privacy e trattamento dati{" "}
+                    <span className="text-red-500">*</span>{" "}
+                    <span className="text-xs text-[#8a7463]">Obbligatorio</span>
                   </span>
                 </label>
 
-                <label className="flex items-start gap-2 text-sm pt-1 border-t border-zinc-800 mt-2">
+                <label className="flex items-start gap-2 text-sm pt-2 border-t border-[#e1d6c9] mt-2">
                   <input
                     type="checkbox"
-                    className="mt-[3px] h-4 w-4 rounded border-zinc-600 bg-zinc-900 text-amber-500"
+                    className="mt-[3px] h-4 w-4 rounded border-[#e1d6c9] text-[#5b4b41]"
                     checked={consentAll}
                     onChange={(e) => handleToggleAll(e.target.checked)}
                   />
-                  <span>I authorize all processing</span>
+                  <span>Autorizzo tutti i trattamenti</span>
                 </label>
 
                 {!consentPrivacy && (
-                  <p className="text-[0.75rem] text-red-400">
-                    Privacy and data processing consent is required to continue.
+                  <p className="text-[0.8rem] text-red-500">
+                    Il consenso privacy è necessario per proseguire.
                   </p>
                 )}
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="mt-4 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <button
                   type="button"
                   onClick={goBack}
-                  className="rounded-full border border-zinc-700 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-100 transition hover:border-amber-400 hover:text-amber-200"
+                  className="w-full sm:w-auto rounded-full border border-[#e1d6c9] px-8 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#5b4b41] transition hover:border-[#5b4b41]"
                 >
                   Back
                 </button>
@@ -806,7 +869,7 @@ export default function BookPage() {
                   type="button"
                   onClick={goNext}
                   disabled={!canGoNext(4)}
-                  className="rounded-full bg-amber-500 px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full sm:w-auto rounded-full bg-[#5b4b41] px-8 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#f5ede4] transition hover:bg-[#46362c] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Continue
                 </button>
@@ -816,60 +879,58 @@ export default function BookPage() {
 
           {/* STEP 5 – Number of guests */}
           {step === 5 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-400">
+            <div className="space-y-6 max-w-md mx-auto">
+              <div className="text-center space-y-2">
+                <h2 className="text-sm sm:text-base font-semibold uppercase tracking-[0.2em] text-[#8a7463]">
                   Step 5 · Number of guests
                 </h2>
-                <p className="mt-2 text-sm text-zinc-300">
-                  How many people will be at the table?
+                <p className="text-sm sm:text-base text-[#5b4b41]">
+                  Quante persone saranno al tavolo?
                 </p>
               </div>
 
-              <div className="rounded-xl border border-zinc-800 bg-black/40 p-4 text-sm text-zinc-300 space-y-1">
+              <div className="rounded-2xl border border-[#e1d6c9] bg-[#f8f2ea]/70 p-4 text-sm text-[#5b4b41] space-y-1">
                 <p>
                   <span className="font-semibold">Name:</span>{" "}
-                  <span className="font-mono text-zinc-100">{displayName || "—"}</span>
+                  <span className="font-mono">{displayName || "—"}</span>
                 </p>
                 <p>
                   <span className="font-semibold">Phone:</span>{" "}
-                  <span className="font-mono text-zinc-100">{phone || "—"}</span>
+                  <span className="font-mono">{phone || "—"}</span>
                 </p>
                 <p>
                   <span className="font-semibold">Email:</span>{" "}
-                  <span className="font-mono text-zinc-100">{email || "—"}</span>
+                  <span className="font-mono">{email || "—"}</span>
                 </p>
               </div>
 
-              <label className="grid gap-1 text-sm sm:max-w-xs">
-                <span className="text-xs uppercase tracking-[0.18em] text-zinc-400">
+              <label className="grid gap-1 text-sm">
+                <span className="text-xs uppercase tracking-[0.18em] text-[#8a7463]">
                   Number of guests
                 </span>
                 <input
                   type="text"
-                  inputMode="numeric" // numeric keypad on mobile
-                  className="rounded-md border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-amber-400"
+                  inputMode="numeric"
+                  className="rounded-full border border-[#e1d6c9] bg-white px-4 py-2.5 text-sm text-[#5b4b41] placeholder-[#b19c88] outline-none transition focus:border-[#5b4b41]"
                   value={party}
                   onChange={(e) => {
                     const value = e.target.value;
-                    // digits only (0–9)
                     if (/^\d*$/.test(value)) {
                       const num = value === "" ? 0 : parseInt(value, 10);
-                      // limit between 1 and 20 (or allow empty)
                       if (num === 0 || (num >= 1 && num <= 20)) {
                         setParty(num);
                       }
                     }
                   }}
-                  placeholder="E.g. 2"
+                  placeholder="2"
                 />
               </label>
 
-              <div className="flex items-center justify-between">
+              <div className="mt-4 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <button
                   type="button"
                   onClick={goBack}
-                  className="rounded-full border border-zinc-700 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-100 transition hover:border-amber-400 hover:text-amber-200"
+                  className="w-full sm:w-auto rounded-full border border-[#e1d6c9] px-8 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#5b4b41] transition hover:border-[#5b4b41]"
                 >
                   Back
                 </button>
@@ -877,7 +938,7 @@ export default function BookPage() {
                   type="button"
                   onClick={goNext}
                   disabled={!canGoNext(5)}
-                  className="rounded-full bg-amber-500 px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full sm:w-auto rounded-full bg-[#5b4b41] px-8 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#f5ede4] transition hover:bg-[#46362c] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Continue
                 </button>
@@ -887,35 +948,35 @@ export default function BookPage() {
 
           {/* STEP 6 – Date */}
           {step === 6 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-400">
+            <div className="space-y-6 max-w-md mx-auto">
+              <div className="text-center space-y-2">
+                <h2 className="text-sm sm:text-base font-semibold uppercase tracking-[0.2em] text-[#8a7463]">
                   Step 6 · Choose the date
                 </h2>
-                <p className="mt-2 text-sm text-zinc-300">
-                  Select the date when you want to reserve the table.
+                <p className="text-sm sm:text-base text-[#5b4b41]">
+                  Seleziona la data in cui vuoi venire a cena.
                 </p>
               </div>
 
-              <div className="rounded-xl border border-zinc-800 bg-black/40 p-4 text-sm text-zinc-300 space-y-1">
+              <div className="rounded-2xl border border-[#e1d6c9] bg-[#f8f2ea]/70 p-4 text-sm text-[#5b4b41]">
                 <p>
                   <span className="font-semibold">Guests:</span>{" "}
-                  <span className="font-mono text-zinc-100">{party}</span>
+                  <span className="font-mono">{party}</span>
                 </p>
               </div>
 
               <div className="space-y-2">
-                <p className="text-xs uppercase tracking-[0.18em] text-zinc-400">
+                <p className="text-xs uppercase tracking-[0.18em] text-[#8a7463] text-center">
                   Date
                 </p>
                 <Calendar value={date} onChange={setDate} minDate={minDate} />
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="mt-4 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <button
                   type="button"
                   onClick={goBack}
-                  className="rounded-full border border-zinc-700 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-100 transition hover:border-amber-400 hover:text-amber-200"
+                  className="w-full sm:w-auto rounded-full border border-[#e1d6c9] px-8 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#5b4b41] transition hover:border-[#5b4b41]"
                 >
                   Back
                 </button>
@@ -923,7 +984,7 @@ export default function BookPage() {
                   type="button"
                   onClick={goNext}
                   disabled={!canGoNext(6)}
-                  className="rounded-full bg-amber-500 px-6 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full sm:w-auto rounded-full bg-[#5b4b41] px-8 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#f5ede4] transition hover:bg-[#46362c] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   See available times
                 </button>
@@ -933,60 +994,60 @@ export default function BookPage() {
 
           {/* STEP 7 – Time + waitlist */}
           {step === 7 && (
-            <div className="space-y-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-sm font-semibold uppercase tracking-[0.2em] text-zinc-400">
+            <div className="space-y-6 max-w-xl mx-auto">
+              <div className="flex flex-col items-center justify-center gap-3 text-center sm:flex-row sm:items-end sm:justify-between">
+                <div className="space-y-2">
+                  <h2 className="text-sm sm:text-base font-semibold uppercase tracking-[0.2em] text-[#8a7463]">
                     Step 7 · Choose the time
                   </h2>
-                  <p className="mt-2 text-sm text-zinc-300">
-                    Select one of the available time slots. The table will be held while
-                    you confirm the reservation.
+                  <p className="text-sm sm:text-base text-[#5b4b41]">
+                    Seleziona uno degli orari disponibili. Il tavolo verrà tenuto
+                    mentre confermi la prenotazione.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={goBack}
-                  className="rounded-full border border-zinc-700 px-4 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-zinc-100 transition hover:border-amber-400 hover:text-amber-200"
+                  className="rounded-full border border-[#e1d6c9] px-6 py-2 text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-[#5b4b41] transition hover:border-[#5b4b41]"
                 >
                   Edit details
                 </button>
               </div>
 
-              <div className="rounded-xl border border-zinc-800 bg-black/40 p-4 text-sm text-zinc-300 space-y-1">
+              <div className="rounded-2xl border border-[#e1d6c9] bg-[#f8f2ea]/70 p-4 text-sm text-[#5b4b41] space-y-1">
                 <p>
                   <span className="font-semibold">Name:</span>{" "}
-                  <span className="font-mono text-zinc-100">{displayName || "—"}</span>
+                  <span className="font-mono">{displayName || "—"}</span>
                 </p>
                 <p>
                   <span className="font-semibold">Guests:</span>{" "}
-                  <span className="font-mono text-zinc-100">{party}</span>
+                  <span className="font-mono">{party}</span>
                 </p>
                 <p>
                   <span className="font-semibold">Date:</span>{" "}
-                  <span className="font-mono text-zinc-100">{date}</span>
+                  <span className="font-mono">{date}</span>
                 </p>
               </div>
 
               <div>
-                <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-[#8a7463] text-center">
                   Available times
                 </h3>
 
                 {isLoadingSlots ? (
-                  <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+                  <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
                     {Array.from({ length: 12 }).map((_, i) => (
                       <div
                         key={i}
-                        className="flex flex-col items-center justify-center rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2 animate-pulse"
+                        className="flex flex-col items-center justify-center rounded-xl border border-[#e1d6c9] bg-[#f8f2ea]/80 px-3 py-2 animate-pulse"
                       >
-                        <div className="h-3 w-10 rounded bg-zinc-700" />
-                        <div className="mt-2 h-3 w-14 rounded-full bg-zinc-800" />
+                        <div className="h-3 w-10 rounded bg-[#e1d6c9]" />
+                        <div className="mt-2 h-3 w-14 rounded-full bg-[#e1d6c9]" />
                       </div>
                     ))}
                   </div>
                 ) : slots.length > 0 ? (
-                  <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
+                  <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
                     {slots.map((s) => (
                       <button
                         key={s.time}
@@ -995,18 +1056,18 @@ export default function BookPage() {
                         className={`flex flex-col items-center justify-center rounded-xl border px-3 py-2 text-sm transition
                           ${
                             s.available
-                              ? "border-zinc-700 bg-zinc-900/60 hover:border-amber-400 hover:bg-zinc-900 cursor-pointer"
-                              : "border-zinc-800 bg-zinc-900/40 opacity-40 cursor-not-allowed"
+                              ? "border-[#e1d6c9] bg-white hover:border-[#5b4b41] hover:bg-[#f8f2ea]"
+                              : "border-[#e1d6c9] bg-[#f8f2ea]/60 opacity-50 cursor-not-allowed"
                           }
                           ${
                             pickedTime === s.time
-                              ? "border-amber-400 bg-zinc-900 ring-2 ring-amber-400/40"
+                              ? "border-[#5b4b41] bg-[#f8f2ea]"
                               : ""
                           }`}
                       >
-                        <span className="text-zinc-50">{s.time}</span>
+                        <span className="text-[#3f3127]">{s.time}</span>
                         {s.suggestedArea ? (
-                          <span className="mt-1 rounded-full bg-zinc-950/80 px-2 py-[2px] text-[0.6rem] uppercase tracking-[0.16em] text-zinc-400 border border-zinc-700">
+                          <span className="mt-1 rounded-full bg-[#f8f2ea] px-2 py-[2px] text-[0.6rem] uppercase tracking-[0.16em] text-[#8a7463] border border-[#e1d6c9]">
                             {s.suggestedArea}
                           </span>
                         ) : null}
@@ -1014,22 +1075,23 @@ export default function BookPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-zinc-400">
-                    No time slots available for this selection. Try another date or a
-                    different number of guests, or join the waitlist.
+                  <p className="text-sm text-[#8a7463] text-center">
+                    Nessun orario disponibile per questa combinazione di data e coperti.
+                    Prova a cambiare giorno o numero di ospiti, oppure unisciti alla
+                    waitlist.
                   </p>
                 )}
               </div>
 
               {/* waitlist suggestion */}
               {!isLoadingSlots && !anyAvailable && !hasForm && (
-                <div className="mt-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100">
-                  <p className="font-semibold text-[0.9rem]">
-                    No availability for this date.
+                <div className="mt-4 rounded-2xl border border-[#beafa1] bg-[#f5ede4] p-4 text-sm text-[#5b4b41]">
+                  <p className="font-semibold text-[0.95rem]">
+                    Nessuna disponibilità per questa data.
                   </p>
-                  <p className="mt-1 text-[0.8rem] text-amber-100/90">
-                    You can join the waitlist and we&apos;ll let you know by email if a
-                    table becomes available.
+                  <p className="mt-1 text-[0.85rem]">
+                    Puoi unirti alla waitlist: ti avviseremo via email se si libera un
+                    tavolo.
                   </p>
                 </div>
               )}
@@ -1053,7 +1115,7 @@ export default function BookPage() {
                     });
                     if (res.ok) {
                       alert(
-                        "You have been added to the waitlist. We&apos;ll email you if a table opens up."
+                        "You have been added to the waitlist. We'll email you if a table opens up."
                       );
                       setShowWaitlist(false);
                       setPickedTime(null);
@@ -1064,42 +1126,40 @@ export default function BookPage() {
                       alert(error || "Unable to add you to the waitlist");
                     }
                   }}
-                  className="mt-6 max-w-xl space-y-3 rounded-2xl border border-zinc-800 bg-black/50 p-5"
+                  className="mt-6 max-w-md mx-auto space-y-3 rounded-2xl border border-[#e1d6c9] bg-white p-5"
                 >
-                  <div className="text-sm text-zinc-200">
+                  <div className="text-sm text-[#5b4b41]">
                     <span className="font-semibold">Join the waitlist</span> for{" "}
                     <span className="font-mono">{date}</span> • {party} guests
                   </div>
 
                   <label className="grid gap-1 text-sm">
-                    <span className="text-xs uppercase tracking-[0.18em] text-zinc-400">
+                    <span className="text-xs uppercase tracking-[0.18em] text-[#8a7463]">
                       Notes (optional)
                     </span>
                     <textarea
                       rows={3}
-                      className="rounded-md border border-zinc-800 bg-zinc-950/70 px-3 py-2 text-sm text-zinc-100 outline-none transition focus:border-amber-400"
+                      className="rounded-2xl border border-[#e1d6c9] bg-white px-4 py-2.5 text-sm text-[#5b4b41] outline-none transition focus:border-[#5b4b41]"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                     />
                   </label>
 
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <button
-                      className="rounded-full bg-amber-500 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-black transition hover:bg-amber-400"
-                    >
+                  <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-1 justify-center">
+                    <button className="rounded-full bg-[#5b4b41] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#f5ede4] transition hover:bg-[#46362c]">
                       Confirm waitlist
                     </button>
                     <button
                       type="button"
-                      className="rounded-full border border-zinc-700 px-5 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-100 transition hover:border-amber-400 hover:text-amber-200"
+                      className="rounded-full border border-[#e1d6c9] px-6 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#5b4b41] transition hover:border-[#5b4b41]"
                       onClick={() => setShowWaitlist(false)}
                     >
                       Cancel
                     </button>
                   </div>
 
-                  <p className="text-[0.7rem] text-zinc-500">
-                    We&apos;ll notify you by email if a table opens up on this date.
+                  <p className="text-[0.75rem] text-[#8a7463] text-center">
+                    Ti avviseremo via email se si libera un tavolo in questa data.
                   </p>
                 </form>
               )}

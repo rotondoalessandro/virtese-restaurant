@@ -49,7 +49,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 Service
               </p>
               <NavItem href="/admin/calendar" label="Calendar" />
-              <NavItem href="/admin/calendar/multi" label="Calendar · Multi" />
               <NavItem href="/admin/bookings" label="Bookings" />
               <NavItem href="/admin/bookings/new" label="New booking" />
               <NavItem href="/admin/tables" label="Tables" />

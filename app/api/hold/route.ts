@@ -69,7 +69,6 @@ export async function POST(req: NextRequest) {
     const candidates = await prisma.table.findMany({
       where: {
         active: true,
-        capacity: { gte: partySize },
         ...(area ? { area } : {}),
       },
       select: { id: true, capacity: true, mergeGroup: true },
@@ -99,7 +98,7 @@ export async function POST(req: NextRequest) {
 
     if (!picked && area) {
       const allCandidates = await prisma.table.findMany({
-        where: { active: true, capacity: { gte: partySize } },
+        where: { active: true },
         select: { id: true, capacity: true, mergeGroup: true },
         orderBy: { capacity: "asc" },
       });

@@ -25,6 +25,18 @@ export async function moveBookingAction({
   });
 
   try {
+    // Capacity guard: prevent moving a party onto a too-small table
+    const [booking, table] = await Promise.all([
+      prisma.booking.findUnique({ where: { id: bookingId }, select: { partySize: true } }),
+      prisma.table.findUnique({ where: { id: tableId }, select: { capacity: true, code: true } }),
+    ]);
+    if (!booking || !table) throw new Error("Booking or table not found");
+    if (table.capacity < booking.partySize) {
+      throw new Error(
+        `Cannot place party of ${booking.partySize} on table ${table.code} (${table.capacity} seats).`
+      );
+    }
+
     await prisma.$transaction(async (tx) => {
       // (opzionale) quick check/lock: impedisci conflitti sul tavolo target in quell'intervallo
       await tx.$queryRawUnsafe(`

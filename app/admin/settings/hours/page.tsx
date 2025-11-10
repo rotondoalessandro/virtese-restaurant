@@ -7,8 +7,13 @@ const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 async function saveHourAction(weekday: number, formData: FormData) {
   "use server";
-  const openTime = String(formData.get("openTime") || "12:00");
-  const closeTime = String(formData.get("closeTime") || "23:00");
+  const isClosed = formData.get("closed") === "on";
+  let openTime = String(formData.get("openTime") || "12:00");
+  let closeTime = String(formData.get("closeTime") || "23:00");
+  if (isClosed) {
+    openTime = "00:00";
+    closeTime = "00:00";
+  }
   await prisma.openingHour.upsert({
     where: { weekday },
     update: { openTime, closeTime },
@@ -43,6 +48,7 @@ export default async function HoursPage() {
       <section className="grid gap-5">
         {labels.map((lbl, i) => {
           const h = byDay.get(i);
+          const closed = h ? h.openTime === h.closeTime : false;
           return (
             <form
               key={i}
@@ -56,18 +62,28 @@ export default async function HoursPage() {
                     {lbl}
                   </h3>
                   <p className="mt-1 text-xs text-zinc-500">
-                    Define open and close times for {lbl}.
+                    Define open and close times for {lbl}. Check &quot;Closed&quot; to disable bookings for this day.
                   </p>
                 </div>
 
                 {/* Inputs */}
-                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+                <div className="grid gap-3 sm:grid-cols-[auto_minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+                  <label className="flex items-center gap-2 text-[0.7rem] uppercase tracking-[0.23em] text-zinc-500">
+                    <input
+                      name="closed"
+                      type="checkbox"
+                      defaultChecked={closed}
+                      className="h-3 w-3 accent-amber-500"
+                    />
+                    Closed
+                  </label>
                   <label className="flex flex-col gap-1 text-[0.7rem] uppercase tracking-[0.23em] text-zinc-500">
                     Open
                     <input
                       name="openTime"
                       type="time"
                       defaultValue={h?.openTime ?? "12:00"}
+                      disabled={closed}
                       className="h-9 rounded-xl border border-zinc-700 bg-black/40 px-3 text-xs text-zinc-100 outline-none ring-0 transition focus:border-amber-400 focus:ring-1 focus:ring-amber-400/60"
                     />
                   </label>
@@ -78,6 +94,7 @@ export default async function HoursPage() {
                       name="closeTime"
                       type="time"
                       defaultValue={h?.closeTime ?? "23:00"}
+                      disabled={closed}
                       className="h-9 rounded-xl border border-zinc-700 bg-black/40 px-3 text-xs text-zinc-100 outline-none ring-0 transition focus:border-amber-400 focus:ring-1 focus:ring-amber-400/60"
                     />
                   </label>

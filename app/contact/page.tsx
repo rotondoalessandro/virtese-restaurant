@@ -13,7 +13,7 @@ type ContactSettings = {
   email?: string
   openingHours?: string[]
   reservationNote?: string
-  mapUrl?: string
+  mapUrl?: string // embed URL or maps link
 }
 
 async function getContactData(): Promise<ContactSettings | null> {
@@ -28,7 +28,7 @@ export default async function ContactPage() {
   const title = contact?.title || 'Contact & reservations'
   const intro =
     contact?.intro ||
-    "Get in touch for bookings, private events or if you have any questions before your visit."
+    'Get in touch for bookings, groups, private events or any questions before your visit.'
 
   const address = contact?.address || '12 Example Street'
   const cityLine = contact?.cityLine || 'London, WC2N XXX'
@@ -41,111 +41,143 @@ export default async function ContactPage() {
 
   const reservationNote =
     contact?.reservationNote ||
-    'For tables of 6 or more, private events or special requests, please contact us directly and we’ll help you plan the evening.'
+    'For tables of 6 or more, company dinners or special occasions, contact us directly and we’ll help you plan the evening properly.'
+
+  // If you have a proper Google Maps embed URL in Sanity, put it in mapUrl.
+  const mapEmbedUrl =
+    contact?.mapUrl ||
+    'https://www.google.com/maps/embed?pb=YOUR_GOOGLE_MAPS_EMBED_HERE'
 
   return (
-    <main className="min-h-screen bg-[#050505] text-zinc-50">
-      <div className="mx-auto max-w-5xl px-4 pb-20 pt-24 sm:px-6 lg:px-0">
-        <div className="grid gap-10 md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)] md:items-start">
-          {/* Left column: info */}
-          <section>
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-zinc-500">
+    <main className="min-h-screen bg-[#f7f2ec] text-[#5b4b41]">
+      <div className="mx-auto max-w-5xl px-4 pb-24 pt-16 sm:px-6 lg:px-8">
+        <div className="rounded-[2rem] border border-[#e1d6c9]/70 bg-white/90 px-6 py-10 shadow-lg backdrop-blur-sm sm:px-10 sm:py-12">
+          {/* Header – same style as menu */}
+          <header className="mb-10 text-center">
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#8a7463]">
               Contact
             </p>
-            <h1 className="mt-3 font-display text-3xl sm:text-4xl">{title}</h1>
-            <p className="mt-3 max-w-xl text-sm leading-relaxed text-zinc-300">
+            <h1 className="mt-4 font-display text-4xl leading-tight text-[#3f3127] sm:text-5xl">
+              {title}
+            </h1>
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#5b4b41]">
               {intro}
             </p>
-
-            <div className="mt-8 grid gap-6 text-sm text-zinc-200 sm:grid-cols-2">
-              <div>
-                <h2 className="text-[0.7rem] uppercase tracking-[0.23em] text-zinc-500">
-                  Address
-                </h2>
-                <p className="mt-2">
-                  {address}
-                  <br />
-                  {cityLine}
-                </p>
-                {contact?.mapUrl && (
-                  <a
-                    href={contact.mapUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-2 inline-block text-xs font-medium uppercase tracking-[0.18em] text-amber-300 underline-offset-4 hover:underline"
-                  >
-                    Open in Maps
-                  </a>
-                )}
-              </div>
-
-              <div>
-                <h2 className="text-[0.7rem] uppercase tracking-[0.23em] text-zinc-500">
-                  Contact
-                </h2>
-                <p className="mt-2">
-                  {phone && (
-                    <>
-                      Phone:{' '}
-                      <a
-                        href={`tel:${phone.replace(/\s+/g, '')}`}
-                        className="hover:text-amber-300"
-                      >
-                        {phone}
-                      </a>
-                      <br />
-                    </>
-                  )}
-                  {email && (
-                    <>
-                      Email:{' '}
-                      <a
-                        href={`mailto:${email}`}
-                        className="hover:text-amber-300"
-                      >
-                        {email}
-                      </a>
-                    </>
-                  )}
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-8 grid gap-6 text-sm text-zinc-200 sm:grid-cols-2">
-              <div>
-                <h2 className="text-[0.7rem] uppercase tracking-[0.23em] text-zinc-500">
-                  Opening hours
-                </h2>
-                <ul className="mt-2 space-y-1">
-                  {openingHours.map((line) => (
-                    <li key={line}>{line}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <div>
-                <h2 className="text-[0.7rem] uppercase tracking-[0.23em] text-zinc-500">
-                  Reservations
-                </h2>
-                <p className="mt-2 text-sm text-zinc-300">
-                  {reservationNote}
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Right column: form */}
-          <section className="rounded-2xl border border-zinc-800 bg-black/50 p-5 sm:p-6">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.23em] text-zinc-500">
-              Send us a message
-            </h2>
-            <p className="mt-2 text-xs text-zinc-400">
-              This form does not confirm a reservation. We&apos;ll get back to you as soon as we
-              can.
+            <p className="mt-4 text-[0.8rem] uppercase tracking-[0.2em] text-[#b19c88]">
+              Bookings · enquiries · private events
             </p>
+          </header>
 
-            <ContactForm />
-          </section>
+          <div className="grid gap-10 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] md:items-start">
+            {/* Left column: info */}
+            <section className="space-y-8 text-sm text-[#5b4b41] sm:text-[0.95rem]">
+              {/* Address + contact */}
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div>
+                  <h2 className="text-[0.7rem] uppercase tracking-[0.23em] text-[#8a7463]">
+                    Address
+                  </h2>
+                  <p className="mt-2 leading-relaxed">
+                    {address}
+                    <br />
+                    {cityLine}
+                  </p>
+                  {contact?.mapUrl && (
+                    <a
+                      href={contact.mapUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-3 inline-block text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-[#5b4b41] underline-offset-4 hover:underline"
+                    >
+                      Open in Maps
+                    </a>
+                  )}
+                </div>
+
+                <div>
+                  <h2 className="text-[0.7rem] uppercase tracking-[0.23em] text-[#8a7463]">
+                    Contact
+                  </h2>
+                  <p className="mt-2 leading-relaxed">
+                    {phone && (
+                      <>
+                        Phone:{' '}
+                        <a
+                          href={`tel:${phone.replace(/\s+/g, '')}`}
+                          className="underline-offset-2 hover:underline"
+                        >
+                          {phone}
+                        </a>
+                        <br />
+                      </>
+                    )}
+                    {email && (
+                      <>
+                        Email:{' '}
+                        <a
+                          href={`mailto:${email}`}
+                          className="underline-offset-2 hover:underline"
+                        >
+                          {email}
+                        </a>
+                      </>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Opening hours + reservations */}
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div>
+                  <h2 className="text-[0.7rem] uppercase tracking-[0.23em] text-[#8a7463]">
+                    Opening hours
+                  </h2>
+                  <ul className="mt-2 space-y-1 leading-relaxed">
+                    {openingHours.map((line) => (
+                      <li key={line}>{line}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <h2 className="text-[0.7rem] uppercase tracking-[0.23em] text-[#8a7463]">
+                    Reservations
+                  </h2>
+                  <p className="mt-2 leading-relaxed">
+                    {reservationNote}
+                  </p>
+                </div>
+              </div>
+            </section>
+
+            {/* Right column: form */}
+            <section className="rounded-2xl bg-[#f8f2ea]/70 px-4 py-5 shadow-sm ring-1 ring-[#e1d6c9]/80 sm:px-5 lg:px-6">
+              <h2 className="text-[0.75rem] font-semibold uppercase tracking-[0.23em] text-[#8a7463]">
+                Send us a message
+              </h2>
+              <p className="mt-2 text-[0.78rem] leading-relaxed text-[#8a7463]">
+                This form does not automatically confirm a reservation. We’ll get back
+                to you as soon as we can.
+              </p>
+
+              <div className="mt-4">
+                <ContactForm />
+              </div>
+            </section>
+          </div>
+
+          {/* Map embedded below info + form */}
+          <div className="mt-10 overflow-hidden rounded-[1.75rem] border border-[#e1d6c9] bg-[#f8f2ea]/80">
+            <div className="relative h-[320px] sm:h-[380px] lg:h-[420px]">
+              <iframe
+                src={mapEmbedUrl}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="h-full w-full border-0"
+                allowFullScreen
+              />
+            </div>
+          </div>
         </div>
       </div>
     </main>

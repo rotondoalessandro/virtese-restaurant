@@ -7,8 +7,11 @@ import { Area, Role } from "@prisma/client";
 
 export const dynamic = "force-dynamic";
 
-function toISODate(d: Date) {
-  return d.toISOString().slice(0, 10);
+function toLocalYMD(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const da = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${da}`;
 }
 
 export default async function CalendarPage({
@@ -46,7 +49,10 @@ export default async function CalendarPage({
   const openMins = hmToMinutes(open);
   const closeMins = hmToMinutes(close);
 
-  const slots = buildDaySlots(dayStart, openMins, closeMins, slotInterval).map(
+  const isClosed = openMins >= closeMins;
+  const slots = isClosed
+    ? []
+    : buildDaySlots(dayStart, openMins, closeMins, slotInterval).map(
     (s) => ({
       time: s.time,
       date: s.date.toISOString(),
@@ -77,6 +83,7 @@ export default async function CalendarPage({
       endISO: string;
       label: string;
       status: "PENDING" | "CONFIRMED";
+      partySize: number;
     }[]
   > = {};
 
@@ -102,6 +109,7 @@ export default async function CalendarPage({
         endISO: endWithBuffer.toISOString(),
         status: b.status as "PENDING" | "CONFIRMED",
         label,
+        partySize: b.partySize,
       });
     }
   }
@@ -142,7 +150,7 @@ export default async function CalendarPage({
               id="date"
               type="date"
               name="date"
-              defaultValue={toISODate(dayStart)}
+              defaultValue={toLocalYMD(dayStart)}
               className="h-9 rounded-xl border border-zinc-700 bg-black/40 px-3 text-xs text-zinc-100 outline-none ring-0 transition placeholder:text-zinc-500 focus:border-amber-400 focus:ring-1 focus:ring-amber-400/60"
             />
           </div>
@@ -197,25 +205,40 @@ export default async function CalendarPage({
         </span>
       </div>
 
-      {/* Grid (client) */}
-      <CalendarGridClient
-        slots={slots}
-        tables={tables.map((t) => ({
-          id: t.id,
-          code: t.code,
-          area: t.area,
-          capacity: t.capacity,
-        }))}
-        blocksByTable={blocksByTable}
-        slotInterval={slotInterval}
-      />
+      {isClosed ? (
+        <div className="rounded-2xl border border-zinc-800 bg-red-500/10 p-5 text-sm text-red-200">
+          Closed day — bookings are disabled for this date.
+        </div>
+      ) : (
+        <CalendarGridClient
+          slots={slots}
+          tables={tables.map((t) => ({
+            id: t.id,
+            code: t.code,
+            area: t.area,
+            capacity: t.capacity,
+          }))}
+          blocksByTable={blocksByTable}
+          slotInterval={slotInterval}
+        />
+      )}
 
       {/* Print CSS */}
       <style>{`
         @media print {
           .print\\:hidden { display: none !important; }
           a, button, input, select { display: none !important; }
-          .min-w-[900px] { min-width: 0 !important; }
+          /* Expand layout for print */
+          .max-w-\[1200px\] { max-width: none !important; width: auto !important; }
+          .overflow-x-auto { overflow: visible !important; }
+          .min-w-\[900px\] { min-width: 0 !important; width: auto !important; }
+          .sticky { position: static !important; }
+          /* Force narrower time columns so more fit per page */
+          .calendar-grid { grid-template-columns: 160px repeat(var(--slot-count), 45px) !important; }
+          /* Slightly tighter padding for cells in print */
+          .calendar-grid > div { padding-left: 4px !important; padding-right: 4px !important; }
+          /* Landscape improves horizontal room */
+          @page { size: landscape; margin: 10mm; }
         }
       `}</style>
     </div>
