@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import SignOutEmail from './SignOutEmail'
@@ -11,10 +12,15 @@ export default async function Navbar() {
     <header className="sticky top-0 z-50 border-b border-[#e1d6c9] bg-white/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Logo / brand */}
-        <Link href="/" className="flex items-center gap-2">
-          <span className="font-display text-lg font-semibold tracking-wide text-[#5b4b41] sm:text-xl">
-            Virtese Restaurant
-          </span>
+        <Link href="/" className="flex items-center gap-2" aria-label="Virtese Restaurant home">
+          <Image
+            src="/logo.png"
+            alt="Virtese Restaurant logo"
+            width={160}
+            height={40}
+            priority
+            className="h-8 w-auto"
+          />
         </Link>
 
         {/* NAV DESKTOP */}
@@ -33,7 +39,7 @@ export default async function Navbar() {
           </Link>
 
           <Link
-            href="/book"
+            href="https://book.virtese.com/virtese"
             className="ml-2 rounded-full bg-[#5b4b41] px-4 py-2 text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-[#f5ede4] transition hover:bg-[#46362c]"
           >
             Book a table
@@ -80,7 +86,7 @@ export default async function Navbar() {
               Contact
             </Link>
             <Link
-              href="/book"
+              href="https://book.virtese.com/virtese"
               className="mt-2 block rounded-full bg-[#5b4b41] px-3 py-2 text-center text-[0.75rem] font-semibold uppercase tracking-[0.18em] text-[#f5ede4] hover:bg-[#46362c]"
             >
               Book a table

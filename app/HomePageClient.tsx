@@ -111,7 +111,7 @@ export function HomePageClient({ homepage }: Props) {
     homepage?.heroSubtitle ||
     'Contemporary Tuscan cooking, seasonal ingredients, natural wines and warm, relaxed service.'
   const heroPrimaryCtaLabel = homepage?.heroPrimaryCtaLabel || 'Book a table'
-  const heroPrimaryCtaHref = homepage?.heroPrimaryCtaHref || '/book'
+  const heroPrimaryCtaHref = homepage?.heroPrimaryCtaHref || 'https://book.virtese.com/virtese'
   const heroSecondaryCtaLabel = homepage?.heroSecondaryCtaLabel || 'View the menu'
   const heroSecondaryCtaHref = homepage?.heroSecondaryCtaHref || '/menu'
   const heroBadges =
@@ -229,7 +229,7 @@ export function HomePageClient({ homepage }: Props) {
     'You can book online for up to 6 guests. For bigger groups, birthdays or takeovers, email us and we’ll help you plan the night properly.'
   const reservationsPrimaryLabel =
     homepage?.reservationsPrimaryLabel || 'Book a table'
-  const reservationsPrimaryHref = homepage?.reservationsPrimaryHref || '/book'
+  const reservationsPrimaryHref = homepage?.reservationsPrimaryHref || 'https://book.virtese.com/virtese'
   const reservationsSecondaryLabel =
     homepage?.reservationsSecondaryLabel || 'Email us'
   const reservationsSecondaryHref = homepage?.reservationsSecondaryHref || '/contact'

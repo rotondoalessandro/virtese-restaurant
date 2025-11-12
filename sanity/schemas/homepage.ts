@@ -47,7 +47,7 @@ export default defineType({
       name: 'heroPrimaryCtaHref',
       title: 'Primary button link',
       type: 'string',
-      initialValue: '/book',
+      initialValue: 'https://book.virtese.com/virtese',
       group: 'hero',
     }),
     defineField({
@@ -439,7 +439,7 @@ export default defineType({
       name: 'reservationsPrimaryHref',
       title: 'Primary booking button link',
       type: 'string',
-      initialValue: '/book',
+      initialValue: 'https://book.virtese.com/virtese',
       group: 'visit',
     }),
     defineField({

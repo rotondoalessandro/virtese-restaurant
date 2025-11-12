@@ -39,3 +39,7 @@ body { margin: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: 
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
 }
+
+/* Headings: slightly bolder across the site */
+h1, h2 { font-weight: 600; }
+h3, h4, h5, h6 { font-weight: 500; }
