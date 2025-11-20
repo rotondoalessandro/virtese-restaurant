@@ -1,19 +1,18 @@
 export default function VerifyRequestPage() {
   return (
-    <main className="min-h-screen bg-[#050505] text-zinc-50 flex items-center justify-center px-6">
-      <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-black/40 p-8 text-center shadow-xl backdrop-blur-md">
-        <h1 className="font-display text-2xl font-semibold text-zinc-50">
-          Check your email
-        </h1>
-        <p className="mt-2 text-sm text-zinc-400">
-          We’ve sent you a secure sign-in link. Click it to access the staff area.
-        </p>
+    <main className="min-h-screen bg-[#f7f2ec] text-[#5b4b41]">
+      <div className="mx-auto flex min-h-[70vh] max-w-3xl items-center px-4 pb-20 pt-16 sm:px-6 lg:px-8">
+        <div className="w-full rounded-[1.5rem] border border-[#e1d6c9] bg-white/90 p-7 text-center shadow-lg backdrop-blur-sm sm:p-9">
+          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.26em] text-[#8a7463]">Magic link sent</p>
+          <h1 className="mt-3 font-display text-3xl leading-tight text-[#3f3127] sm:text-4xl">Check your email</h1>
+          <p className="mt-3 text-sm leading-relaxed text-[#5b4b41]">
+            We have emailed you a secure sign-in link for the Virtese team area. Open it to continue.
+          </p>
 
-        <div className="mt-8">
-          <div className="mx-auto h-12 w-12 rounded-full border border-amber-400/60 bg-amber-500/10 flex items-center justify-center">
+          <div className="mx-auto mt-8 flex h-16 w-16 items-center justify-center rounded-full border border-[#e1d6c9] bg-[#f8f2ea]">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 text-amber-400"
+              className="h-7 w-7 text-[#5b4b41]"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -26,12 +25,22 @@ export default function VerifyRequestPage() {
               />
             </svg>
           </div>
-        </div>
 
-        <p className="mt-8 text-xs text-zinc-500">
-          Didn’t receive it? Check your spam folder or try again in a few minutes.
-        </p>
+          <div className="mt-8 space-y-2 text-xs leading-relaxed text-[#8a7463]">
+            <p>Did not receive it? Check spam or wait a minute, then request again from the sign-in page.</p>
+            <p>
+              For help, email{' '}
+              <a
+                href="mailto:admin@virteserestaurant.com"
+                className="font-semibold underline decoration-[#d7c4b3] underline-offset-4 hover:text-[#3f3127]"
+              >
+                admin@virteserestaurant.com
+              </a>
+              .
+            </p>
+          </div>
+        </div>
       </div>
     </main>
-  )
+  );
 }

@@ -2,7 +2,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import SignOutEmail from './SignOutEmail'
 
 export default async function Navbar() {
   const session = await getServerSession(authOptions)
@@ -46,9 +45,12 @@ export default async function Navbar() {
           </Link>
 
           {email ? (
-            <div className="ml-2">
-              <SignOutEmail email={email} />
-            </div>
+            <Link
+              href="/admin"
+              className="ml-2 text-[0.7rem] uppercase tracking-[0.23em] text-[#8a7463] transition hover:text-[#5b4b41]"
+            >
+              {email}
+            </Link>
           ) : (
             <Link
               href="/auth/signin"
@@ -93,9 +95,12 @@ export default async function Navbar() {
             </Link>
 
             {email ? (
-              <div className="mt-3 border-t border-[#e1d6c9] pt-2">
-                <SignOutEmail email={email} />
-              </div>
+              <Link
+                href="/admin"
+                className="mt-3 block text-[0.7rem] uppercase tracking-[0.23em] text-[#8a7463] hover:text-[#5b4b41]"
+              >
+                {email}
+              </Link>
             ) : (
               <Link
                 href="/auth/signin"

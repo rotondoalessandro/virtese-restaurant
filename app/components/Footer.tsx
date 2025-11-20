@@ -1,100 +1,14 @@
 import Link from 'next/link'
-import { prisma } from '@/lib/prisma'
-
-function hmToMinutes(hm?: string | null) {
-  if (!hm) return 0;
-  const [h, m] = hm.split(':').map(Number)
-  return h * 60 + m
-}
-
-function dayLabel(idx: number) {
-  // Prisma: 0 = Sun ... 6 = Sat
-  const labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-  return labels[idx] || String(idx)
-}
-
-function groupDays(days: number[]) {
-  if (days.length === 0) return ''
-  const parts: string[] = []
-  let start = days[0]
-  let prev = days[0]
-  for (let i = 1; i < days.length; i++) {
-    const d = days[i]
-    if (d === prev + 1) {
-      prev = d
-      continue
-    }
-    parts.push(start === prev ? dayLabel(start) : `${dayLabel(start)}–${dayLabel(prev)}`)
-    start = prev = d
-  }
-  parts.push(start === prev ? dayLabel(start) : `${dayLabel(start)}–${dayLabel(prev)}`)
-  return parts.join(', ')
-}
+import { sanityClient } from '@/lib/sanity.client'
 
 export default async function Footer() {
   const year = new Date().getFullYear()
 
-  // Pull opening hours from DB
-  const hours = await prisma.openingHour.findMany({ orderBy: { weekday: 'asc' } })
+  const contact = await sanityClient.fetch<{ openingHours?: string[] }>(
+    `*[_type == "contactSettings"][0]{openingHours}`
+  )
 
-  // Build summary
-  let hoursNode: React.ReactNode = null
-  if (hours.length) {
-    const openDays = hours
-      .filter((h) => hmToMinutes(h.openTime) < hmToMinutes(h.closeTime))
-      .map((h) => h.weekday)
-      .sort((a, b) => a - b)
-    const closedDays = hours
-      .filter((h) => hmToMinutes(h.openTime) >= hmToMinutes(h.closeTime))
-      .map((h) => h.weekday)
-      .sort((a, b) => a - b)
-
-    const openKeySet = new Set(
-      hours
-        .filter((h) => hmToMinutes(h.openTime) < hmToMinutes(h.closeTime))
-        .map((h) => `${h.openTime}-${h.closeTime}`)
-    )
-
-    if (openDays.length === 0) {
-      hoursNode = (
-        <p className="mt-3 text-sm text-[#5b4b41]">
-          <span className="italic text-[#8a7463]">Closed this week</span>
-        </p>
-      )
-    } else if (openKeySet.size === 1) {
-      // Uniform opening times: show compact summary
-      const anyOpen = hours.find((h) => hmToMinutes(h.openTime) < hmToMinutes(h.closeTime))!
-      const openTimes = `${anyOpen.openTime} – ${anyOpen.closeTime}`
-      const openDaysLabel = groupDays(openDays)
-      const closedLabel = closedDays.length ? groupDays(closedDays) : ''
-      hoursNode = (
-        <p className="mt-3 text-sm text-[#5b4b41]">
-          {openDaysLabel} · {openTimes}
-          {closedLabel ? (
-            <>
-              <br />
-              <span className="italic text-[#8a7463]">Closed {closedLabel}</span>
-            </>
-          ) : null}
-        </p>
-      )
-    } else {
-      // Varying times: list days
-      hoursNode = (
-        <ul className="mt-3 space-y-1 text-sm text-[#5b4b41]">
-          {hours.map((h) => {
-            const closed = hmToMinutes(h.openTime) >= hmToMinutes(h.closeTime)
-            return (
-              <li key={h.weekday} className="flex justify-between gap-3">
-                <span className="text-[#8a7463] w-16">{dayLabel(h.weekday)}</span>
-                <span>{closed ? 'Closed' : `${h.openTime} – ${h.closeTime}`}</span>
-              </li>
-            )
-          })}
-        </ul>
-      )
-    }
-  }
+  const openingLines = contact?.openingHours?.filter(Boolean) ?? []
 
   return (
     <footer className="border-t border-[#e1d6c9] bg-white text-[#5b4b41]">
@@ -111,7 +25,17 @@ export default async function Footer() {
               <br />
               London, WC2N XXX
             </p>
-            {hoursNode}
+            {openingLines.length ? (
+              <ul className="mt-3 space-y-1 text-sm text-[#5b4b41]">
+                {openingLines.map((line) => (
+                  <li key={line}>{line}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-3 text-sm text-[#5b4b41]">
+                Opening hours available in Sanity contact settings.
+              </p>
+            )}
           </div>
 
           {/* Links */}
@@ -221,14 +145,14 @@ export default async function Footer() {
       {/* Bottom bar */}
       <div className="border-t border-[#e1d6c9] bg-[#f8f2ea] py-5 text-center text-[0.8rem] text-[#8a7463]">
         <p>
-          © {year}{' '}
+          (c) {year} 
           <span className="text-[#5b4b41] font-medium">
             Virtese Restaurant
           </span>
           . All rights reserved.
         </p>
         <p className="mt-1 text-[#b19c88]">
-          Designed with 🍷 in London
+          Designed with care in London
         </p>
       </div>
     </footer>

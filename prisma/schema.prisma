@@ -10,7 +10,7 @@ datasource db {
 }
 
 /* =======================
-   ENUMS
+   AUTH ONLY (NextAuth)
 ======================= */
 enum Role {
   OWNER
@@ -19,24 +19,6 @@ enum Role {
   STAFF
 }
 
-enum BookingStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-  NO_SHOW
-}
-
-enum Area {
-  INDOOR
-  OUTDOOR
-  BAR
-  HIGHTOP
-  PRIVATE
-}
-
-/* =======================
-   AUTH (NextAuth-ready)
-======================= */
 model User {
   id            String   @id @default(cuid())
   email         String   @unique
@@ -46,7 +28,6 @@ model User {
   role          Role     @default(STAFF)
   accounts      Account[]
   sessions      Session[]
-  auditLogs     AuditLog[] @relation("AuditActor")
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -85,212 +66,4 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
-}
-
-/* Optional: invite flow for staff onboarding later */
-model Invite {
-  id        String   @id @default(cuid())
-  email     String
-  role      Role     @default(HOST)
-  token     String   @unique
-  expiresAt DateTime
-  usedAt    DateTime?
-}
-
-/* =======================
-   CUSTOMERS & BOOKINGS
-======================= */
-model Customer {
-  id      String   @id @default(cuid())
-  email   String?  @unique
-  phone   String?
-
-  // NOME / COGNOME
-  name    String?  // nome
-  surname String?  // cognome
-
-  notes   String?
-
-  // CONSENSI
-  marketingConsent Boolean   @default(false)
-  profilingConsent Boolean   @default(false)
-  privacyConsent   Boolean   @default(false)
-  consentUpdatedAt DateTime?
-
-  createdAt DateTime @default(now())
-
-  bookings Booking[]
-}
-
-model Table {
-  id         String         @id @default(cuid())
-  code       String         @unique
-  capacity   Int
-  area       Area
-  mergeGroup String?
-  active     Boolean        @default(true)
-
-  bookings   BookingTable[]
-}
-
-/* ✅ Added unique constraint on weekday for upsert() */
-model OpeningHour {
-  id        String  @id @default(cuid())
-  weekday   Int     // 0=Sun ... 6=Sat
-  openTime  String  // "12:00"
-  closeTime String  // "23:00"
-
-  @@unique([weekday])
-}
-
-model SpecialHour {
-  id        String   @id @default(cuid())
-  date      DateTime @db.Date
-  closed    Boolean  @default(false)
-  openTime  String?
-  closeTime String?
-  note      String?
-}
-
-model ReservationRule {
-  id               String   @id @default(cuid())
-  seatDuration     Int      @default(90) // minutes
-  slotInterval     Int      @default(15) // minutes
-  bufferBefore     Int      @default(0)  // minutes
-  bufferAfter      Int      @default(0)  // minutes
-  maxCoversPerSlot Int?
-  depositCents     Int?
-  createdAt        DateTime @default(now())
-}
-
-model Booking {
-  id            String         @id @default(cuid())
-  dateTime      DateTime
-  partySize     Int
-  status        BookingStatus  @default(PENDING)
-  area          Area?
-  tables        BookingTable[]
-  customerId    String?
-  customer      Customer?      @relation(fields: [customerId], references: [id])
-  source        String?        // web, phone, walk-in, etc.
-  notes         String?
-  holdExpiresAt DateTime?
-  reminderSentAt DateTime?
-  manageToken   String?        @unique // for customer self-service links
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-
-  @@index([dateTime])
-}
-
-model BookingTable {
-  bookingId String
-  tableId   String
-  start_at  DateTime? @db.Timestamptz(6)
-  end_at    DateTime? @db.Timestamptz(6)
-  booking   Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  table     Table     @relation(fields: [tableId], references: [id])
-  @@id([bookingId, tableId])
-}
-
-model BlackoutSlot {
-  id     String   @id @default(cuid())
-  start  DateTime
-  end    DateTime
-  reason String?
-}
-
-model WaitlistEntry {
-  id         String   @id @default(cuid())
-  createdAt  DateTime @default(now())
-
-  dateISO    String   // "YYYY-MM-DD" (giorno richiesto)
-  partySize  Int
-  area       Area?
-
-  name       String
-  email      String
-  phone      String?
-  notes      String?
-
-  status     String   @default("OPEN") // OPEN | NOTIFIED | BOOKED | CANCELLED | EXPIRED
-  notifiedAt DateTime?
-
-  @@index([dateISO, status])
-}
-
-/* =======================
-   MENU / CATALOG
-======================= */
-model MenuCategory {
-  id          String     @id @default(cuid())
-  name        String     @unique
-  description String?
-  order       Int        @default(0)
-  items       MenuItem[]
-}
-
-model MenuItem {
-  id          String       @id @default(cuid())
-  categoryId  String
-  category    MenuCategory @relation(fields: [categoryId], references: [id])
-  name        String
-  description String?
-  priceCents  Int
-  tags        String[]
-  allergens   String[]
-  isAvailable Boolean      @default(true)
-  imageUrl    String?
-}
-
-/* =======================
-   MARKETING / GROWTH
-======================= */
-model Subscriber {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  source    String?  // footer form, booking opt-in, etc.
-  createdAt DateTime @default(now())
-}
-
-model Campaign {
-  id          String   @id @default(cuid())
-  name        String
-  channel     String   // email, sms, instagram, etc.
-  status      String   // draft, scheduled, sent
-  scheduledAt DateTime?
-  payload     Json
-  createdAt   DateTime @default(now())
-}
-
-model PromoCode {
-  id          String   @id @default(cuid())
-  code        String   @unique
-  description String?
-  active      Boolean  @default(true)
-  startsAt    DateTime?
-  endsAt      DateTime?
-  meta        Json?
-}
-
-/* =======================
-   OBSERVABILITY / FLAGS
-======================= */
-model AuditLog {
-  id        String   @id @default(cuid())
-  actorId   String?
-  actor     User?    @relation("AuditActor", fields: [actorId], references: [id])
-  action    String
-  target    String?
-  metadata  Json?
-  createdAt DateTime @default(now())
-
-  @@index([createdAt])
-}
-
-model FeatureFlag {
-  key     String @id
-  enabled Boolean @default(false)
-  payload Json?
 }
