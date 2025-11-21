@@ -1,7 +1,8 @@
 // app/menu/page.tsx
 import { sanityClient } from '@/lib/sanity.client'
+import Image from 'next/image'
 
-export const metadata = { title: 'Menu — Virtese Restaurant' }
+export const metadata = { title: 'Menu - Virtese Restaurant' }
 
 type MenuItem = {
   _id: string
@@ -10,6 +11,8 @@ type MenuItem = {
   price: string
   highlight?: boolean
   tags?: string[]
+  imageUrl?: string
+  imageAlt?: string
 }
 
 type MenuCategory = {
@@ -31,7 +34,9 @@ async function getMenuData(): Promise<MenuCategory[]> {
         description,
         price,
         highlight,
-        tags
+        tags,
+        "imageUrl": image.asset->url,
+        "imageAlt": image.alt
       }
     }
   `
@@ -135,7 +140,18 @@ export default async function MenuPage() {
                           key={item._id}
                           className="rounded-2xl bg-white/70 px-4 py-3 shadow-sm ring-1 ring-[#e1d6c9]/70 transition hover:-translate-y-[1px] hover:bg-white hover:shadow-md sm:px-5 sm:py-4"
                         >
-                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:gap-4">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+                            {item.imageUrl ? (
+                              <div className="relative h-20 w-full overflow-hidden rounded-xl bg-[#f8f2ea] sm:h-24 sm:w-28 shrink-0">
+                                <Image
+                                  src={item.imageUrl}
+                                  alt={item.imageAlt || item.name}
+                                  fill
+                                  sizes="(max-width: 640px) 100vw, 28rem"
+                                  className="object-cover"
+                                />
+                              </div>
+                            ) : null}
                             <div className="flex-1">
                               <div className="flex flex-wrap items-center gap-2">
                                 <h3 className="text-base font-semibold text-[#3f3127] sm:text-lg">

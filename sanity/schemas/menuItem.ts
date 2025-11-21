@@ -59,5 +59,19 @@ export default defineType({
       type: 'number',
       description: 'Use this to control the order of dishes within the same category',
     }),
+
+    defineField({
+      name: 'image',
+      title: 'Dish image',
+      type: 'image',
+      options: { hotspot: true },
+      fields: [
+        defineField({
+          name: 'alt',
+          title: 'Alt text',
+          type: 'string',
+        }),
+      ],
+    }),
   ],
 })

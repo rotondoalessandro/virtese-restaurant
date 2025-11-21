@@ -1,8 +1,13 @@
 import Link from 'next/link'
 import { sanityClient } from '@/lib/sanity.client'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import SignOutEmail from './SignOutEmail'
 
 export default async function Footer() {
   const year = new Date().getFullYear()
+  const session = await getServerSession(authOptions)
+  const email = session?.user?.email
 
   const contact = await sanityClient.fetch<{ openingHours?: string[] }>(
     `*[_type == "contactSettings"][0]{openingHours}`
@@ -144,16 +149,29 @@ export default async function Footer() {
 
       {/* Bottom bar */}
       <div className="border-t border-[#e1d6c9] bg-[#f8f2ea] py-5 text-center text-[0.8rem] text-[#8a7463]">
-        <p>
-          (c) {year} 
-          <span className="text-[#5b4b41] font-medium">
-            Virtese Restaurant
-          </span>
-          . All rights reserved.
-        </p>
-        <p className="mt-1 text-[#b19c88]">
-          Designed with care in London
-        </p>
+        <div className="flex flex-col items-center gap-2">
+          <p>
+            (c) {year}{' '}
+            <span className="text-[#5b4b41] font-medium">
+              Virtese Restaurant
+            </span>
+            . Developed and designed by{' '}
+            <a
+              className="font-semibold text-[#5b4b41] underline-offset-4 hover:underline"
+              href="https://virtese.com"
+              target="_blank"
+              rel="noreferrer"
+            >
+              virtese.com
+            </a>
+            .
+          </p>
+          {email ? (
+            <div className="inline-flex items-center rounded-full border border-[#e1d6c9] bg-white px-3 py-1 text-[0.78rem] text-[#5b4b41]">
+              <SignOutEmail email={email} />
+            </div>
+          ) : null}
+        </div>
       </div>
     </footer>
   )

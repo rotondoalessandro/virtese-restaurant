@@ -36,7 +36,7 @@ function getImageUrl(src?: SanityImage, fallback?: string): string {
     const builder = built as unknown as SanityBuilder
     return builder.width(1600).height(1000).fit('crop').url()
   } catch (err) {
-    console.warn('⚠️ Sanity image fallback used:', err)
+    console.warn('Sanity image fallback used:', err)
     return fallback || ''
   }
 }
@@ -61,10 +61,21 @@ type HomepageData = {
 
   openingHoursLabel?: string
   openingHoursText?: string
+  openingHoursList?: string[]
+  openingHoursSubtitle?: string
+  openingHoursCtaLabel?: string
+  openingHoursCtaHref?: string
+  openingHoursCtaSecondaryLabel?: string
+  openingHoursCtaSecondaryHref?: string
   findUsLabel?: string
   findUsText?: string
   bookingInfoLabel?: string
   bookingInfoText?: string
+
+  aboutPrimaryCtaLabel?: string
+  aboutPrimaryCtaHref?: string
+  aboutSecondaryCtaLabel?: string
+  aboutSecondaryCtaHref?: string
 
   galleryTitleEyebrow?: string
   galleryTitle?: string
@@ -79,6 +90,11 @@ type HomepageData = {
   vibesTitle?: string
   vibesSubtitle?: string
   vibesCards?: { title?: string; text?: string }[]
+
+  menuHeroTitle?: string
+  menuHeroSubtitle?: string
+  menuHeroCtaLabel?: string
+  menuHeroCtaHref?: string
 
   visitEyebrow?: string
   visitTitle?: string
@@ -104,8 +120,11 @@ const fade = {
 }
 
 export function HomePageClient({ homepage }: Props) {
+  const btnPrimary = 'rounded-full bg-[#3f3127] px-8 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#fdf7f0] transition hover:bg-black'
+  const btnSecondary = 'rounded-full border border-[#3f3127] px-8 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#3f3127] transition hover:bg-[#fdf7f0]'
+
   // HERO
-  const heroTagline = homepage?.heroTagline || 'Virtese Restaurant · London'
+  const heroTagline = homepage?.heroTagline || 'Virtese Restaurant - London'
   const heroTitle = homepage?.heroTitle || 'Modern Tuscan Kitchen'
   const heroSubtitle =
     homepage?.heroSubtitle ||
@@ -114,14 +133,6 @@ export function HomePageClient({ homepage }: Props) {
   const heroPrimaryCtaHref = homepage?.heroPrimaryCtaHref || 'https://book.virtese.com/virtese'
   const heroSecondaryCtaLabel = homepage?.heroSecondaryCtaLabel || 'View the menu'
   const heroSecondaryCtaHref = homepage?.heroSecondaryCtaHref || '/menu'
-  const heroBadges =
-    homepage?.heroBadges?.length
-      ? homepage.heroBadges
-      : [
-          { label: 'Seasonal Tuscan cooking' },
-          { label: 'Natural wines & cocktails' },
-          { label: 'Warm, relaxed dining room' },
-        ]
 
   const heroMainImage = getImageUrl(
     homepage?.heroMainImage,
@@ -139,16 +150,29 @@ export function HomePageClient({ homepage }: Props) {
   // QUICK INFO (used in hero)
   const openingHoursLabel = homepage?.openingHoursLabel || 'Opening hours'
   const openingHoursText =
-    homepage?.openingHoursText || 'Tue–Sat · 18:00 – 23:00 · Kitchen late'
+    homepage?.openingHoursText || 'Tue-Sat | 18:00-23:00 | Kitchen late'
+  const openingHoursList = homepage?.openingHoursList?.filter(Boolean) || []
+  const openingHoursSubtitle =
+    homepage?.openingHoursSubtitle ||
+    "Come for a drink, stay for dinner — we're here when London gets hungry."
+  const openingHoursCtaLabel = homepage?.openingHoursCtaLabel || 'Book a table'
+  const openingHoursCtaHref = homepage?.openingHoursCtaHref || 'https://book.virtese.com/virtese'
+  const openingHoursCtaSecondaryLabel =
+    homepage?.openingHoursCtaSecondaryLabel || 'View menu'
+  const openingHoursCtaSecondaryHref = homepage?.openingHoursCtaSecondaryHref || '/menu'
   // If needed elsewhere later, bring back findUs/booking copy.
 
   // ABOUT
   const aboutEyebrow = homepage?.aboutEyebrow || 'This is Virtese'
   const aboutTitle =
     homepage?.aboutTitle || 'A contemporary Tuscan trattoria in the heart of London.'
+  const aboutPrimaryCtaLabel = homepage?.aboutPrimaryCtaLabel || 'View menu'
+  const aboutPrimaryCtaHref = homepage?.aboutPrimaryCtaHref || '/menu'
+  const aboutSecondaryCtaLabel = homepage?.aboutSecondaryCtaLabel || 'Book now'
+  const aboutSecondaryCtaHref = homepage?.aboutSecondaryCtaHref || 'https://book.virtese.com/virtese'
   const kitchenCard = homepage?.kitchenCard || {
     label: 'The kitchen',
-    text: 'Fresh pasta every day, long-cooked ragù, grilled mains, seasonal vegetables and plates made to share in the middle of the table.',
+    text: 'Fresh pasta every day, long-cooked ragu, grilled mains, seasonal vegetables and plates made to share in the middle of the table.',
   }
   const wineCard = homepage?.wineCard || {
     label: 'Wine & drinks',
@@ -156,27 +180,7 @@ export function HomePageClient({ homepage }: Props) {
   }
 
   // VIBES
-  const vibesTitle = homepage?.vibesTitle || 'How people use Virtese'
-  const vibesSubtitle =
-    homepage?.vibesSubtitle ||
-    'Drop by for a quick glass at the bar, a long dinner with friends or a late dessert with amaro.'
-  const vibesCards =
-    homepage?.vibesCards?.length
-      ? homepage.vibesCards
-      : [
-          {
-            title: 'After work at the bar',
-            text: 'A glass of wine, a couple of crostini and a few small plates from the kitchen — before or after work.',
-          },
-          {
-            title: 'Dinner with friends',
-            text: 'Starters to share, two or three pastas in the middle, a big grilled main for the table.',
-          },
-          {
-            title: 'Late night',
-            text: 'Big desserts, amaro, one last drink and the feeling you don’t really want to go home yet.',
-          },
-        ]
+  // Vibes fields reserved for future use; not rendered currently.
 
   // GALLERY
   const galleryTitleEyebrow = homepage?.galleryTitleEyebrow || 'A quick look inside'
@@ -226,7 +230,7 @@ export function HomePageClient({ homepage }: Props) {
     homepage?.reservationsTitle || 'Reservations & groups'
   const reservationsBody =
     homepage?.reservationsBody ||
-    'You can book online for up to 6 guests. For bigger groups, birthdays or takeovers, email us and we’ll help you plan the night properly.'
+    'You can book online for up to 6 guests. For bigger groups, birthdays or takeovers, email us and well help you plan the night properly.'
   const reservationsPrimaryLabel =
     homepage?.reservationsPrimaryLabel || 'Book a table'
   const reservationsPrimaryHref = homepage?.reservationsPrimaryHref || 'https://book.virtese.com/virtese'
@@ -234,13 +238,20 @@ export function HomePageClient({ homepage }: Props) {
     homepage?.reservationsSecondaryLabel || 'Email us'
   const reservationsSecondaryHref = homepage?.reservationsSecondaryHref || '/contact'
 
+  const menuHeroTitle = homepage?.menuHeroTitle || 'A short menu, real ingredients and full flavours.'
+  const menuHeroSubtitle =
+    homepage?.menuHeroSubtitle ||
+    'Seasonal dishes, handmade pasta, grilled vegetables and desserts to finish with a spoon.'
+  const menuHeroCtaLabel = homepage?.menuHeroCtaLabel || 'View the full menu'
+  const menuHeroCtaHref = homepage?.menuHeroCtaHref || '/menu'
+
   // MAP (replace with your real embed URL)
   const mapEmbedUrl =
     'https://www.google.com/maps/embed?pb=YOUR_GOOGLE_MAPS_EMBED_HERE'
 
   return (
     <main className="min-h-screen bg-white text-[#5b4b41]">
-      {/* HERO – BIG IMAGE + ESSENTIALS */}
+      {/* HERO - BIG IMAGE + ESSENTIALS */}
       <section className="relative overflow-hidden border-b border-[#e1d6c9]">
         <div className="relative h-[85vh] min-h-[520px]">
           <Image
@@ -267,7 +278,7 @@ export function HomePageClient({ homepage }: Props) {
               variants={fade}
               initial="hidden"
               animate="visible"
-              className="font-display text-5xl text-[#fdf7f0] drop-shadow-[0_2px_6px_rgba(0,0,0,0.5)] sm:text-6xl lg:text-7xl"
+              className="font-display text-6xl sm:text-7xl lg:text-8xl text-[#fdf7f0] font-semibold drop-shadow-[0_3px_10px_rgba(0,0,0,0.6)]"
             >
               {heroTitle}
             </motion.h1>
@@ -276,25 +287,16 @@ export function HomePageClient({ homepage }: Props) {
               variants={fade}
               initial="hidden"
               animate="visible"
-              className="mt-4 max-w-2xl text-base text-[#f5ede4]/95 drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] sm:text-lg"
+              className="mt-4 max-w-xl text-lg text-[#f5ede4]/95 drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]"
             >
               {heroSubtitle}
-            </motion.p>
-
-            <motion.p
-              variants={fade}
-              initial="hidden"
-              animate="visible"
-              className="mt-3 text-[0.8rem] uppercase tracking-[0.25em] text-[#f0dfcf]/90"
-            >
-              {openingHoursText}
             </motion.p>
 
             <motion.div
               variants={fade}
               initial="hidden"
               animate="visible"
-              className="mt-8 flex flex-wrap justify-center gap-4"
+              className="mt-10 flex flex-wrap justify-center gap-4"
             >
               <Link
                 href={heroPrimaryCtaHref}
@@ -302,139 +304,166 @@ export function HomePageClient({ homepage }: Props) {
               >
                 {heroPrimaryCtaLabel}
               </Link>
+
               <Link
                 href={heroSecondaryCtaHref}
-                className="rounded-full border border-[#f0dfcf]/80 bg-transparent px-8 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#f5ede4] transition hover:border-white hover:bg-white/10"
+                className="rounded-full border border-[#f0dfcf]/80 px-8 py-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#f5ede4] hover:border-white hover:bg-white/10"
               >
                 {heroSecondaryCtaLabel}
               </Link>
-            </motion.div>
-
-            {/* Small hero badges */}
-            <motion.div
-              variants={fade}
-              initial="hidden"
-              animate="visible"
-              className="mt-6 flex flex-wrap justify-center gap-3 text-[0.8rem] text-[#f5ede4]/90"
-            >
-              {heroBadges.map(
-                (b, i) =>
-                  b.label && (
-                    <span
-                      key={i}
-                      className="inline-flex items-center gap-2 rounded-full bg-black/40 px-3 py-1 backdrop-blur"
-                    >
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#f0dfcf]" />
-                      {b.label}
-                    </span>
-                  )
-              )}
             </motion.div>
           </div>
         </div>
       </section>
 
       {/* ABOUT / THIS IS VIRTESE */}
-      <section className="border-b border-[#e1d6c9] bg-white">
-        <div className="mx-auto max-w-6xl px-4 py-14 sm:px-8 lg:py-16">
-          <Header
-            eyebrow={aboutEyebrow}
-            title={aboutTitle}
-            subtitle="Tables close together, high chatter, plates in the middle to share. Virtese is a Tuscan home transplanted to London: simple ingredients, big flavours and a team that makes you feel looked after from the moment you sit down."
-          />
+<section className="border-b border-[#e1d6c9] bg-white">
+  <div className="mx-auto max-w-6xl px-4 py-14 sm:px-8 lg:py-16">
 
-          <div className="mt-10 grid gap-10 md:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] md:items-stretch">
-            {/* Image side */}
-            <div className="relative h-72 overflow-hidden rounded-3xl bg-neutral-100 sm:h-80">
-              <Image
-                src={heroDishImage || heroMainImage}
-                alt="A corner of Virtese dining room"
-                fill
-                className="object-cover transition duration-700 ease-out hover:scale-105"
-              />
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-              <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
-                <div>
-                  <p className="text-[0.7rem] uppercase tracking-[0.24em] text-[#f0dfcf]">
-                    Inside Virtese
-                  </p>
-                  <p className="mt-1 text-sm font-medium text-[#fdf7f0]">
-                    Warm light, full tables and plates made to be shared.
-                  </p>
-                </div>
-                <span className="hidden rounded-full bg-black/45 px-3 py-1 text-[0.7rem] uppercase tracking-[0.22em] text-[#f5ede4] backdrop-blur sm:inline-flex">
-                  Modern Tuscan Kitchen
-                </span>
-              </div>
-            </div>
+    <Header
+      eyebrow={aboutEyebrow}
+      title={aboutTitle}
+      subtitle="A Tuscan home in London - warm tables, big flavours, shared plates."
+    />
 
-            {/* Text + kitchen / wine cards */}
-            <div className="flex flex-col gap-6">
-              <div className="space-y-4 text-sm leading-relaxed text-[#3f3127]">
-                <p>
-                  Come for a glass and a couple of small bites at the bar, for a long
-                  dinner with friends or to celebrate something properly. The menu
-                  changes with the seasons but stays very Tuscan: pici, slow ragù,
-                  grilled meats, roasted vegetables and serious desserts.
-                </p>
-                <p>
-                  We don&apos;t do fine dining — we do plates that make you want to order
-                  “one more thing” and stay at the table a little longer than you
-                  planned.
-                </p>
-              </div>
+    <div className="mt-10 grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] md:items-center">
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                {[kitchenCard, wineCard].map((card, i) => (
-                  <div
-                    key={i}
-                    className="overflow-hidden rounded-2xl border border-[#e1d6c9] bg-white shadow-sm"
-                  >
-                    {card.image && (
-                      <div className="relative h-28">
-                        <Image
-                          src={getImageUrl(card.image, i === 0 ? heroDishImage : heroWineImage)}
-                          alt={card.image.alt || 'Detail'}
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    )}
-                    <div className="p-4 text-sm">
-                      <p className="text-[0.7rem] uppercase tracking-[0.23em] text-[#8a7463]">
-                        {card.label}
-                      </p>
-                      <p className="mt-2 text-[#3f3127]">{card.text}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+      {/* TEXT SIDE LEFT */}
+      <div className="flex flex-col gap-6">
+        
+        {/* SHORT TEXT */}
+        <div className="space-y-4 text-sm leading-relaxed text-[#3f3127]">
+          <p>
+            Stop by for a glass at the bar or stay for a long dinner. Our menu is
+            seasonal, simple and very Tuscan: handmade pasta, slow ragu, grilled meats,
+            roasted vegetables and proper desserts.
+          </p>
+          <p>
+            No fine dining - just plates that make you order &apos;one more thing&apos; and stay longer.
+          </p>
         </div>
-      </section>
+
+        {/* CTA BUTTONS */}
+        <div className="mt-4 flex flex-wrap gap-4">
+          <Link
+            href={aboutPrimaryCtaHref}
+            className={btnPrimary}
+          >
+            {aboutPrimaryCtaLabel}
+          </Link>
+
+          <Link
+            href={aboutSecondaryCtaHref}
+            className={btnSecondary}
+          >
+            {aboutSecondaryCtaLabel}
+          </Link>
+        </div>
+
+        {/* CARDS */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[kitchenCard, wineCard].map((card, i) => (
+            <div
+              key={i}
+              className="overflow-hidden rounded-2xl border border-[#e1d6c9] bg-white shadow-sm"
+            >
+              {card.image && (
+                <div className="relative h-28">
+                  <Image
+                    src={getImageUrl(card.image, i === 0 ? heroDishImage : heroWineImage)}
+                    alt={card.image.alt || 'Detail'}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
+
+              <div className="p-4 text-sm">
+                <p className="text-[0.7rem] uppercase tracking-[0.23em] text-[#8a7463]">
+                  {card.label}
+                </p>
+                <p className="mt-2 text-[#3f3127]">
+                  {i === 0
+                    ? "Fresh pasta, slow-cooked sauces and grills. Honest Tuscan cooking."
+                    : "A tight list of Italian bottles - bold reds, crisp whites, zero pretense."}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* IMAGE SIDE RIGHT */}
+      <div className="relative h-96 sm:h-[480px] md:h-full overflow-hidden rounded-3xl bg-neutral-100">
+        <Image
+          src={heroDishImage || heroMainImage}
+          alt="Inside Virtese"
+          fill
+          className="object-cover transition duration-700 ease-out hover:scale-105"
+        />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+
+        <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[0.7rem] uppercase tracking-[0.24em] text-[#f0dfcf]">
+              Inside Virtese
+            </p>
+            <p className="mt-1 text-sm font-medium text-[#fdf7f0]">
+              Warm light. Full tables. Real food.
+            </p>
+          </div>
+
+          <span className="hidden rounded-full bg-black/45 px-3 py-1 text-[0.7rem] uppercase tracking-[0.22em] text-[#f5ede4] backdrop-blur sm:inline-flex">
+            Modern Tuscan Kitchen
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
 
       {/* VIBES / HOW TO USE THE PLACE */}
+      {/* OPENING HOURS */}
       <section className="border-b border-[#e1d6c9] bg-white">
         <div className="mx-auto max-w-6xl px-4 py-14 sm:px-8 lg:py-16">
-          <Header title={vibesTitle} subtitle={vibesSubtitle} />
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
-            {vibesCards.map((v, i) => (
+                    <Header
+            title="Opening Hours"
+            subtitle={openingHoursSubtitle}
+          />
+
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {(openingHoursList.length ? openingHoursList : [openingHoursText]).map((line, i) => (
               <div
-                key={i}
-                className="flex h-full flex-col rounded-2xl border border-[#e1d6c9] bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+                key={`${line}-${i}`}
+                className="flex h-full items-center justify-center rounded-2xl border border-[#e1d6c9] bg-white p-5 text-center text-sm leading-relaxed text-[#3f3127] shadow-sm transition hover:-translate-y-1 hover:shadow-md"
               >
-                <h3 className="text-base font-semibold text-[#3f3127]">
-                  {v.title}
-                </h3>
-                <p className="mt-2 flex-1 text-sm text-[#5b4b41]">{v.text}</p>
+                {line}
               </div>
             ))}
           </div>
+
+          {/* CTA */}
+          <div className="mt-10 flex justify-center gap-4">
+            <Link
+              href={openingHoursCtaHref}
+              className={btnPrimary}
+            >
+              {openingHoursCtaLabel}
+            </Link>
+
+            <Link
+              href={openingHoursCtaSecondaryHref}
+              className={btnSecondary}
+            >
+              {openingHoursCtaSecondaryLabel}
+            </Link>
+          </div>
         </div>
       </section>
 
-      {/* MENU HERO – BIG IMAGE + SIMPLE TEXT */}
+      {/* MENU HERO - BIG IMAGE + SIMPLE TEXT */}
       <section className="relative border-b border-[#e1d6c9]">
         <div className="relative h-[70vh] min-h-[480px]">
           <Image
@@ -451,26 +480,23 @@ export function HomePageClient({ homepage }: Props) {
               Our menu
             </p>
             <h2 className="mt-3 max-w-3xl font-display text-3xl text-[#fdf7f0] sm:text-4xl md:text-5xl">
-              A short menu, real ingredients and full flavours.
+              {menuHeroTitle}
             </h2>
             <p className="mt-4 max-w-xl text-sm text-[#f5ede4]/90 sm:text-base">
-              Seasonal dishes, handmade pasta, grilled vegetables and desserts to
-              finish with a spoon. Take a look before you book or let us guide you
-              through the menu at the table.
+              {menuHeroSubtitle}
             </p>
 
             <Link
-              href="/menu"
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#f0dfcf]/95 px-7 py-2.5 text-xs font-semibold uppercase tracking-[0.2em] text-[#5b4b41] transition hover:bg-white"
+              href={menuHeroCtaHref}
+              className={`${btnPrimary} inline-flex items-center gap-2 px-7 py-2.5 text-xs`}
             >
-              View the full menu
-              <span className="mt-[1px] text-xs">↗</span>
+              {menuHeroCtaLabel}
             </Link>
           </div>
         </div>
       </section>
 
-      {/* GALLERY – HORIZONTAL SLIDER WITH TALL IMAGES */}
+      {/* GALLERY - HORIZONTAL SLIDER WITH TALL IMAGES */}
       <section className="border-b border-[#e1d6c9] bg-white">
         <div className="mx-auto max-w-6xl px-4 py-14 sm:px-8 lg:py-16">
           <Header
@@ -528,7 +554,7 @@ export function HomePageClient({ homepage }: Props) {
         </div>
       </section>
 
-            {/* VISIT, CONTACT, MAP & RESERVATIONS – THE ONLY WARM BACKGROUNDS */}
+            {/* VISIT, CONTACT, MAP & RESERVATIONS - THE ONLY WARM BACKGROUNDS */}
       <section className="bg-white border-t border-[#e1d6c9]">
         <div className="mx-auto max-w-6xl space-y-12 px-4 py-16 sm:px-8 lg:py-20">
           {/* Centered heading */}
@@ -548,7 +574,7 @@ export function HomePageClient({ homepage }: Props) {
 
           {/* Left info / Right map */}
           <div className="grid gap-10 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.1fr)] md:items-stretch">
-            {/* LEFT – Address, contact, hours, reservations */}
+            {/* LEFT - Address, contact, hours, reservations */}
             <div className="space-y-8">
               <div className="rounded-3xl border border-[#e1d6c9] bg-[#f8f2ea] px-6 py-6 text-[0.95rem] text-[#5b4b41] sm:px-7 sm:py-7 sm:text-base">
                 <p className="text-[0.75rem] uppercase tracking-[0.23em] text-[#8a7463]">
@@ -591,7 +617,7 @@ export function HomePageClient({ homepage }: Props) {
                       {openingHoursLabel || 'Opening hours'}
                     </p>
                     <p className="mt-3 leading-relaxed">
-                      {openingHoursText}
+                      {openingHoursList.length ? openingHoursList.join('\n') : openingHoursText}
                     </p>
                   </div>
                 </div>
@@ -608,13 +634,13 @@ export function HomePageClient({ homepage }: Props) {
                 <div className="mt-5 flex flex-col items-center justify-start gap-3 sm:flex-row">
                   <Link
                     href={reservationsPrimaryHref}
-                    className="w-full rounded-full bg-[#5b4b41] px-9 py-3 text-[0.8rem] font-semibold uppercase tracking-[0.2em] text-[#f5ede4] transition hover:bg-[#46362c] sm:w-auto"
+                    className={`${btnPrimary} w-full sm:w-auto px-9 py-3 text-[0.8rem]`}
                   >
                     {reservationsPrimaryLabel || 'Book a table'}
                   </Link>
                   <Link
                     href={reservationsSecondaryHref}
-                    className="w-full rounded-full border border-[#5b4b41] px-9 py-3 text-[0.8rem] font-semibold uppercase tracking-[0.2em] text-[#5b4b41] transition hover:bg-[#5b4b41] hover:text-[#f5ede4] sm:w-auto"
+                    className={`${btnSecondary} w-full sm:w-auto px-9 py-3 text-[0.8rem]`}
                   >
                     {reservationsSecondaryLabel || 'Email us'}
                   </Link>
@@ -622,7 +648,7 @@ export function HomePageClient({ homepage }: Props) {
               </div>
             </div>
 
-            {/* RIGHT – Map */}
+            {/* RIGHT - Map */}
             <div className="overflow-hidden rounded-3xl border border-[#e1d6c9] bg-[#f8f2ea]">
               <div className="relative h-[360px] sm:h-[440px] md:h-full">
                 <iframe

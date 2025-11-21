@@ -24,6 +24,11 @@ const homepageQuery = groq`*[_type == "homepage"][0]{
 
   openingHoursLabel,
   openingHoursText,
+  openingHoursSubtitle,
+  openingHoursCtaLabel,
+  openingHoursCtaHref,
+  openingHoursCtaSecondaryLabel,
+  openingHoursCtaSecondaryHref,
   findUsLabel,
   findUsText,
   bookingInfoLabel,
@@ -37,12 +42,21 @@ const homepageQuery = groq`*[_type == "homepage"][0]{
   aboutEyebrow,
   aboutTitle,
   aboutBody,
+  aboutPrimaryCtaLabel,
+  aboutPrimaryCtaHref,
+  aboutSecondaryCtaLabel,
+  aboutSecondaryCtaHref,
   kitchenCard,
   wineCard,
 
   vibesTitle,
   vibesSubtitle,
   vibesCards,
+
+  menuHeroTitle,
+  menuHeroSubtitle,
+  menuHeroCtaLabel,
+  menuHeroCtaHref,
 
   visitEyebrow,
   visitTitle,
@@ -65,19 +79,17 @@ async function getHomepageData() {
   return data
 }
 
-async function getOpeningSummary(): Promise<string | undefined> {
+export default async function HomePage() {
+  const homepage = await getHomepageData()
   const contact = await sanityClient.fetch<{ openingHours?: string[] }>(
     `*[_type == "contactSettings"][0]{openingHours}`
   )
-  const lines = contact?.openingHours?.filter(Boolean)
-  if (!lines || lines.length === 0) return undefined
-  // Show a compact string for the hero strip
-  return lines.slice(0, 2).join(' | ')
-}
+  const openingLines = contact?.openingHours?.filter(Boolean) ?? []
+  const openingSummary = openingLines.length ? openingLines.slice(0, 2).join(' | ') : undefined
 
-export default async function HomePage() {
-  const homepage = await getHomepageData()
-  const openingSummary = await getOpeningSummary()
-
-  return <HomePageClient homepage={{ ...homepage, openingHoursText: openingSummary }} />
+  return (
+    <HomePageClient
+      homepage={{ ...homepage, openingHoursText: openingSummary, openingHoursList: openingLines }}
+    />
+  )
 }

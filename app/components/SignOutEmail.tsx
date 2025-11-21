@@ -6,9 +6,9 @@ export default function SignOutEmail({ email }: { email: string }) {
     <button
       onClick={() => signOut({ callbackUrl: '/' })}
       title="Sign out"
-      className="text-xs md:text-sm underline decoration-dotted hover:decoration-solid cursor-pointer"
+      className="text-xs md:text-sm cursor-pointer"
     >
-      {email}
+      Sign out ({email})
     </button>
   )
 }

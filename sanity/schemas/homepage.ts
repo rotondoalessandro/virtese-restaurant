@@ -12,6 +12,7 @@ export default defineType({
     { name: 'about', title: '"This is Virtese"' },
     { name: 'vibes', title: 'Vibes section' },
     { name: 'visit', title: 'Visit / Contact' },
+    { name: 'menuHero', title: 'Menu hero' },
   ],
   fields: [
     /* HERO ------------------------------------------------------ */
@@ -172,6 +173,40 @@ export default defineType({
       group: 'quickInfo',
     }),
     defineField({
+      name: 'openingHoursSubtitle',
+      title: 'Opening hours subtitle',
+      type: 'string',
+      group: 'quickInfo',
+    }),
+    defineField({
+      name: 'openingHoursCtaLabel',
+      title: 'Opening hours primary button label',
+      type: 'string',
+      initialValue: 'Book a table',
+      group: 'quickInfo',
+    }),
+    defineField({
+      name: 'openingHoursCtaHref',
+      title: 'Opening hours primary button link',
+      type: 'string',
+      initialValue: 'https://book.virtese.com/virtese',
+      group: 'quickInfo',
+    }),
+    defineField({
+      name: 'openingHoursCtaSecondaryLabel',
+      title: 'Opening hours secondary button label',
+      type: 'string',
+      initialValue: 'View menu',
+      group: 'quickInfo',
+    }),
+    defineField({
+      name: 'openingHoursCtaSecondaryHref',
+      title: 'Opening hours secondary button link',
+      type: 'string',
+      initialValue: '/menu',
+      group: 'quickInfo',
+    }),
+    defineField({
       name: 'findUsLabel',
       title: 'Find us label',
       type: 'string',
@@ -264,6 +299,34 @@ export default defineType({
       title: 'Body text',
       type: 'array',
       of: [{ type: 'block' }],
+      group: 'about',
+    }),
+    defineField({
+      name: 'aboutPrimaryCtaLabel',
+      title: 'About primary CTA label',
+      type: 'string',
+      initialValue: 'View menu',
+      group: 'about',
+    }),
+    defineField({
+      name: 'aboutPrimaryCtaHref',
+      title: 'About primary CTA link',
+      type: 'string',
+      initialValue: '/menu',
+      group: 'about',
+    }),
+    defineField({
+      name: 'aboutSecondaryCtaLabel',
+      title: 'About secondary CTA label',
+      type: 'string',
+      initialValue: 'Book now',
+      group: 'about',
+    }),
+    defineField({
+      name: 'aboutSecondaryCtaHref',
+      title: 'About secondary CTA link',
+      type: 'string',
+      initialValue: 'https://book.virtese.com/virtese',
       group: 'about',
     }),
 
@@ -455,6 +518,35 @@ export default defineType({
       type: 'string',
       initialValue: '/contact',
       group: 'visit',
+    }),
+
+    /* MENU HERO -------------------------------------------------- */
+    defineField({
+      name: 'menuHeroTitle',
+      title: 'Menu hero title',
+      type: 'string',
+      group: 'menuHero',
+    }),
+    defineField({
+      name: 'menuHeroSubtitle',
+      title: 'Menu hero subtitle',
+      type: 'text',
+      rows: 3,
+      group: 'menuHero',
+    }),
+    defineField({
+      name: 'menuHeroCtaLabel',
+      title: 'Menu hero CTA label',
+      type: 'string',
+      initialValue: 'View the full menu',
+      group: 'menuHero',
+    }),
+    defineField({
+      name: 'menuHeroCtaHref',
+      title: 'Menu hero CTA link',
+      type: 'string',
+      initialValue: '/menu',
+      group: 'menuHero',
     }),
   ],
 })

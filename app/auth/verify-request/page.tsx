@@ -31,10 +31,10 @@ export default function VerifyRequestPage() {
             <p>
               For help, email{' '}
               <a
-                href="mailto:admin@virteserestaurant.com"
+                href="mailto:info@virtese.com"
                 className="font-semibold underline decoration-[#d7c4b3] underline-offset-4 hover:text-[#3f3127]"
               >
-                admin@virteserestaurant.com
+                info@virtese.com
               </a>
               .
             </p>
