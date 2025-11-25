@@ -40,7 +40,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
             <div className="space-y-2">
               <p className="px-2 text-[0.7rem] uppercase tracking-[0.22em] text-[#b19c88]">Booking Admin</p>
-              <NavItem href="https://book.virtese.com/virtese/admin" label="Booking Admin" />
+              <NavItem href="https://book.virtese.com/virtese-restaurant/admin" label="Booking Admin" />
             </div>
 
             <div className="space-y-2 border-t border-[#e1d6c9] pt-4">

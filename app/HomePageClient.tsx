@@ -130,7 +130,7 @@ export function HomePageClient({ homepage }: Props) {
     homepage?.heroSubtitle ||
     'Contemporary Tuscan cooking, seasonal ingredients, natural wines and warm, relaxed service.'
   const heroPrimaryCtaLabel = homepage?.heroPrimaryCtaLabel || 'Book a table'
-  const heroPrimaryCtaHref = homepage?.heroPrimaryCtaHref || 'https://book.virtese.com/virtese'
+  const heroPrimaryCtaHref = homepage?.heroPrimaryCtaHref || 'https://book.virtese.com/virtese-restaurant'
   const heroSecondaryCtaLabel = homepage?.heroSecondaryCtaLabel || 'View the menu'
   const heroSecondaryCtaHref = homepage?.heroSecondaryCtaHref || '/menu'
 
@@ -156,7 +156,7 @@ export function HomePageClient({ homepage }: Props) {
     homepage?.openingHoursSubtitle ||
     "Come for a drink, stay for dinner — we're here when London gets hungry."
   const openingHoursCtaLabel = homepage?.openingHoursCtaLabel || 'Book a table'
-  const openingHoursCtaHref = homepage?.openingHoursCtaHref || 'https://book.virtese.com/virtese'
+  const openingHoursCtaHref = homepage?.openingHoursCtaHref || 'https://book.virtese.com/virtese-restaurant'
   const openingHoursCtaSecondaryLabel =
     homepage?.openingHoursCtaSecondaryLabel || 'View menu'
   const openingHoursCtaSecondaryHref = homepage?.openingHoursCtaSecondaryHref || '/menu'
@@ -169,7 +169,7 @@ export function HomePageClient({ homepage }: Props) {
   const aboutPrimaryCtaLabel = homepage?.aboutPrimaryCtaLabel || 'View menu'
   const aboutPrimaryCtaHref = homepage?.aboutPrimaryCtaHref || '/menu'
   const aboutSecondaryCtaLabel = homepage?.aboutSecondaryCtaLabel || 'Book now'
-  const aboutSecondaryCtaHref = homepage?.aboutSecondaryCtaHref || 'https://book.virtese.com/virtese'
+  const aboutSecondaryCtaHref = homepage?.aboutSecondaryCtaHref || 'https://book.virtese.com/virtese-restaurant'
   const kitchenCard = homepage?.kitchenCard || {
     label: 'The kitchen',
     text: 'Fresh pasta every day, long-cooked ragu, grilled mains, seasonal vegetables and plates made to share in the middle of the table.',
@@ -233,7 +233,7 @@ export function HomePageClient({ homepage }: Props) {
     'You can book online for up to 6 guests. For bigger groups, birthdays or takeovers, email us and well help you plan the night properly.'
   const reservationsPrimaryLabel =
     homepage?.reservationsPrimaryLabel || 'Book a table'
-  const reservationsPrimaryHref = homepage?.reservationsPrimaryHref || 'https://book.virtese.com/virtese'
+  const reservationsPrimaryHref = homepage?.reservationsPrimaryHref || 'https://book.virtese.com/virtese-restaurant'
   const reservationsSecondaryLabel =
     homepage?.reservationsSecondaryLabel || 'Email us'
   const reservationsSecondaryHref = homepage?.reservationsSecondaryHref || '/contact'

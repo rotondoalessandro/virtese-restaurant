@@ -59,7 +59,7 @@ export default async function Footer() {
               </li>
               <li>
                 <Link
-                  href="https://book.virtese.com/virtese"
+                  href="https://book.virtese.com/virtese-restaurant"
                   className="transition hover:text-[#3f3127]"
                 >
                   Reservations

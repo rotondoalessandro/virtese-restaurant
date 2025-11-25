@@ -38,7 +38,7 @@ export default async function Navbar() {
           </Link>
 
           <Link
-            href="https://book.virtese.com/virtese"
+            href="https://book.virtese.com/virtese-restaurant"
             className="ml-2 rounded-full bg-[#5b4b41] px-4 py-2 text-[0.75rem] font-semibold uppercase tracking-[0.2em] text-[#f5ede4] transition hover:bg-[#46362c]"
           >
             Book a table
@@ -88,7 +88,7 @@ export default async function Navbar() {
               Contact
             </Link>
             <Link
-              href="https://book.virtese.com/virtese"
+              href="https://book.virtese.com/virtese-restaurant"
               className="mt-2 block rounded-full bg-[#5b4b41] px-3 py-2 text-center text-[0.75rem] font-semibold uppercase tracking-[0.18em] text-[#f5ede4] hover:bg-[#46362c]"
             >
               Book a table
