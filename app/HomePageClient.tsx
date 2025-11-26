@@ -140,7 +140,7 @@ export function HomePageClient({ homepage }: Props) {
   )
   const heroDishImage = getImageUrl(
     homepage?.heroDishImage,
-    'https://images.unsplash.com/photo-1525755662778-989d0524087e?auto=format&fit=crop&w=1400&q=80'
+    'https://images.unsplash.com/photo-1712746784067-e9e1bd86c043?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
   )
   const heroWineImage = getImageUrl(
     homepage?.heroWineImage,
@@ -170,14 +170,6 @@ export function HomePageClient({ homepage }: Props) {
   const aboutPrimaryCtaHref = homepage?.aboutPrimaryCtaHref || '/menu'
   const aboutSecondaryCtaLabel = homepage?.aboutSecondaryCtaLabel || 'Book now'
   const aboutSecondaryCtaHref = homepage?.aboutSecondaryCtaHref || 'https://book.virtese.com/virtese-restaurant'
-  const kitchenCard = homepage?.kitchenCard || {
-    label: 'The kitchen',
-    text: 'Fresh pasta every day, long-cooked ragu, grilled mains, seasonal vegetables and plates made to share in the middle of the table.',
-  }
-  const wineCard = homepage?.wineCard || {
-    label: 'Wine & drinks',
-    text: 'A short list of natural wines, Tuscan classics, simple cocktails and amari to end the night properly.',
-  }
 
   // VIBES
   // Vibes fields reserved for future use; not rendered currently.
@@ -200,17 +192,17 @@ export function HomePageClient({ homepage }: Props) {
           {
             alt: 'Wine glasses at the bar',
             asset: { _ref: '' },
-            url: 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=900&q=80',
+            url: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
           },
           {
             alt: 'Dining room with warm lights',
             asset: { _ref: '' },
-            url: 'https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=900&q=80',
+            url: 'https://images.unsplash.com/photo-1722587544083-057ef8a58925?q=80&w=1330&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
           },
           {
             alt: 'Table setting detail',
             asset: { _ref: '' },
-            url: 'https://images.unsplash.com/photo-1525755662778-989d0524087e?auto=format&fit=crop&w=900&q=80',
+            url: 'https://images.unsplash.com/photo-1712746785117-6aec15c9f368?q=80&w=1187&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
           },
         ]
 
@@ -262,7 +254,7 @@ export function HomePageClient({ homepage }: Props) {
             className="object-cover"
           />
           {/* Dark overlay for contrast */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/60 to-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/30 to-black/10" />
 
           <div className="relative z-10 mx-auto flex h-full max-w-5xl flex-col items-center justify-center px-6 text-center">
             <motion.p
@@ -316,108 +308,57 @@ export function HomePageClient({ homepage }: Props) {
         </div>
       </section>
 
-      {/* ABOUT / THIS IS VIRTESE */}
+
+{/* ABOUT / THIS IS VIRTESE */}
 <section className="border-b border-[#e1d6c9] bg-white">
-  <div className="mx-auto max-w-6xl px-4 py-14 sm:px-8 lg:py-16">
+  <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8 lg:py-24">
 
-    <Header
-      eyebrow={aboutEyebrow}
-      title={aboutTitle}
-      subtitle="A Tuscan home in London - warm tables, big flavours, shared plates."
-    />
+    <div className="grid gap-16 md:grid-cols-2 md:gap-20 md:items-start">
 
-    <div className="mt-10 grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] md:items-center">
+      {/* LEFT COLUMN — ALL TEXT (INCLUDING HEADER) */}
+      <div className="flex flex-col gap-10">
 
-      {/* TEXT SIDE LEFT */}
-      <div className="flex flex-col gap-6">
-        
-        {/* SHORT TEXT */}
-        <div className="space-y-4 text-sm leading-relaxed text-[#3f3127]">
+        <Header
+          eyebrow={aboutEyebrow}
+          title={aboutTitle}
+          subtitle="A Tuscan home in London — warm tables, big flavours, shared plates."
+        />
+
+        {/* INTRO TEXT */}
+        <div className="space-y-5 text-[0.98rem] leading-relaxed text-[#3f3127]">
           <p>
             Stop by for a glass at the bar or stay for a long dinner. Our menu is
             seasonal, simple and very Tuscan: handmade pasta, slow ragu, grilled meats,
             roasted vegetables and proper desserts.
           </p>
           <p>
-            No fine dining - just plates that make you order &apos;one more thing&apos; and stay longer.
+            No fine dining — just plates that make you order &apos;one more thing&apos;
+            and stay longer.
           </p>
         </div>
 
         {/* CTA BUTTONS */}
-        <div className="mt-4 flex flex-wrap gap-4">
-          <Link
-            href={aboutPrimaryCtaHref}
-            className={btnPrimary}
-          >
+        <div className="flex flex-wrap gap-4 pt-2">
+          <Link href={aboutPrimaryCtaHref} className={btnPrimary}>
             {aboutPrimaryCtaLabel}
           </Link>
 
-          <Link
-            href={aboutSecondaryCtaHref}
-            className={btnSecondary}
-          >
+          <Link href={aboutSecondaryCtaHref} className={btnSecondary}>
             {aboutSecondaryCtaLabel}
           </Link>
         </div>
-
-        {/* CARDS */}
-        <div className="grid gap-4 sm:grid-cols-2">
-          {[kitchenCard, wineCard].map((card, i) => (
-            <div
-              key={i}
-              className="overflow-hidden rounded-2xl border border-[#e1d6c9] bg-white shadow-sm"
-            >
-              {card.image && (
-                <div className="relative h-28">
-                  <Image
-                    src={getImageUrl(card.image, i === 0 ? heroDishImage : heroWineImage)}
-                    alt={card.image.alt || 'Detail'}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              )}
-
-              <div className="p-4 text-sm">
-                <p className="text-[0.7rem] uppercase tracking-[0.23em] text-[#8a7463]">
-                  {card.label}
-                </p>
-                <p className="mt-2 text-[#3f3127]">
-                  {i === 0
-                    ? "Fresh pasta, slow-cooked sauces and grills. Honest Tuscan cooking."
-                    : "A tight list of Italian bottles - bold reds, crisp whites, zero pretense."}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
 
-      {/* IMAGE SIDE RIGHT */}
-      <div className="relative h-96 sm:h-[480px] md:h-full overflow-hidden rounded-3xl bg-neutral-100">
+      {/* RIGHT COLUMN — FULL-HEIGHT IMAGE, NO TEXT */}
+      <div className="relative w-full h-full overflow-hidden rounded-3xl bg-neutral-100 shadow-sm">
         <Image
           src={heroDishImage || heroMainImage}
           alt="Inside Virtese"
           fill
-          className="object-cover transition duration-700 ease-out hover:scale-105"
+          className="object-cover object-center"
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-
-        <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
-          <div>
-            <p className="text-[0.7rem] uppercase tracking-[0.24em] text-[#f0dfcf]">
-              Inside Virtese
-            </p>
-            <p className="mt-1 text-sm font-medium text-[#fdf7f0]">
-              Warm light. Full tables. Real food.
-            </p>
-          </div>
-
-          <span className="hidden rounded-full bg-black/45 px-3 py-1 text-[0.7rem] uppercase tracking-[0.22em] text-[#f5ede4] backdrop-blur sm:inline-flex">
-            Modern Tuscan Kitchen
-          </span>
-        </div>
       </div>
+
     </div>
   </div>
 </section>
@@ -473,7 +414,7 @@ export function HomePageClient({ homepage }: Props) {
             priority
             className="object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/35 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/15 to-transparent" />
 
           <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center">
             <p className="text-[0.75rem] font-semibold uppercase tracking-[0.25em] text-[#f5ede4]/90">
@@ -488,7 +429,7 @@ export function HomePageClient({ homepage }: Props) {
 
             <Link
               href={menuHeroCtaHref}
-              className={`${btnPrimary} inline-flex items-center gap-2 px-7 py-2.5 text-xs`}
+              className={`${btnPrimary} inline-flex items-center gap-2 px-7 mt-5 py-2.5 text-xs`}
             >
               {menuHeroCtaLabel}
             </Link>
@@ -554,115 +495,110 @@ export function HomePageClient({ homepage }: Props) {
         </div>
       </section>
 
-            {/* VISIT, CONTACT, MAP & RESERVATIONS - THE ONLY WARM BACKGROUNDS */}
-      <section className="bg-white border-t border-[#e1d6c9]">
-        <div className="mx-auto max-w-6xl space-y-12 px-4 py-16 sm:px-8 lg:py-20">
-          {/* Centered heading */}
-          <div className="text-center space-y-3">
-            <p className="text-[0.8rem] font-semibold uppercase tracking-[0.26em] text-[#8a7463]">
-              {visitEyebrow || 'Visit & bookings'}
+     {/* VISIT / CONTACT / MAP */}
+<section className="border-t border-[#e1d6c9] bg-white">
+  <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8 lg:py-24">
+
+    <div className="grid gap-16 md:grid-cols-2 md:gap-20 md:items-start">
+
+      {/* LEFT COLUMN — ALL TEXT */}
+      <div className="flex flex-col gap-10">
+
+        {/* TEXT HEADER */}
+        <div className="flex flex-col gap-4">
+          <p className="text-[0.8rem] font-semibold uppercase tracking-[0.28em] text-[#8a7463]">
+            {visitEyebrow}
+          </p>
+
+          <h2 className="font-display text-3xl sm:text-4xl text-[#3f3127]">
+            {visitTitle}
+          </h2>
+
+          {visitBody && (
+            <p className="text-[0.95rem] leading-relaxed text-[#5b4b41] sm:text-base">
+              {visitBody}
             </p>
-            <h2 className="font-display text-3xl text-[#3f3127] sm:text-4xl">
-              {visitTitle || 'Come and see us.'}
-            </h2>
-            {visitBody && (
-              <p className="mx-auto max-w-xl text-[0.95rem] leading-relaxed text-[#5b4b41] sm:text-base">
-                {visitBody}
-              </p>
-            )}
-          </div>
+          )}
+        </div>
 
-          {/* Left info / Right map */}
-          <div className="grid gap-10 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.1fr)] md:items-stretch">
-            {/* LEFT - Address, contact, hours, reservations */}
-            <div className="space-y-8">
-              <div className="rounded-3xl border border-[#e1d6c9] bg-[#f8f2ea] px-6 py-6 text-[0.95rem] text-[#5b4b41] sm:px-7 sm:py-7 sm:text-base">
-                <p className="text-[0.75rem] uppercase tracking-[0.23em] text-[#8a7463]">
-                  {addressTitle || 'Address'}
-                </p>
-                <p className="mt-3 whitespace-pre-line leading-relaxed">
-                  {addressLines.join('\n')}
-                </p>
+        {/* ADDRESS */}
+        <div className="space-y-2">
+          <p className="text-[0.75rem] uppercase tracking-[0.23em] text-[#8a7463]">
+            {addressTitle}
+          </p>
+          <p className="text-[0.97rem] leading-relaxed text-[#3f3127] whitespace-pre-line">
+            {addressLines.join('\n')}
+          </p>
+        </div>
 
-                <div className="mt-6 grid gap-5 text-[0.95rem] sm:grid-cols-2 sm:text-base">
-                  <div>
-                    <p className="text-[0.75rem] uppercase tracking-[0.23em] text-[#8a7463]">
-                      {contactTitle || 'Contact'}
-                    </p>
-                    <p className="mt-3 leading-relaxed">
-                      {phone && (
-                        <>
-                          <a
-                            href={`tel:${phone.replace(/\s+/g, '')}`}
-                            className="underline-offset-4 hover:underline"
-                          >
-                            {phone}
-                          </a>
-                          <br />
-                        </>
-                      )}
-                      {email && (
-                        <a
-                          href={`mailto:${email}`}
-                          className="underline-offset-4 hover:underline"
-                        >
-                          {email}
-                        </a>
-                      )}
-                    </p>
-                  </div>
+        {/* CONTACT */}
+        <div className="space-y-2">
+          <p className="text-[0.75rem] uppercase tracking-[0.23em] text-[#8a7463]">
+            {contactTitle}
+          </p>
+          <p className="text-[0.97rem] leading-relaxed text-[#3f3127]">
+            <a href={`tel:${phone.replace(/\s+/g, '')}`} className="underline-offset-4 hover:underline">
+              {phone}
+            </a>
+            <br />
+            <a href={`mailto:${email}`} className="underline-offset-4 hover:underline">
+              {email}
+            </a>
+          </p>
+        </div>
 
-                  <div>
-                    <p className="text-[0.75rem] uppercase tracking-[0.23em] text-[#8a7463]">
-                      {openingHoursLabel || 'Opening hours'}
-                    </p>
-                    <p className="mt-3 leading-relaxed">
-                      {openingHoursList.length ? openingHoursList.join('\n') : openingHoursText}
-                    </p>
-                  </div>
-                </div>
-              </div>
+        {/* HOURS */}
+        <div className="space-y-2">
+          <p className="text-[0.75rem] uppercase tracking-[0.23em] text-[#8a7463]">
+            {openingHoursLabel}
+          </p>
+          <p className="text-[0.97rem] leading-relaxed text-[#3f3127] whitespace-pre-line">
+            {openingHoursList.length ? openingHoursList.join('\n') : openingHoursText}
+          </p>
+        </div>
 
-              <div className="rounded-3xl border border-[#e1d6c9] bg-[#f5ede4]/90 px-6 py-6 text-center text-[0.95rem] text-[#3f3127] shadow-sm sm:px-7 sm:py-7 sm:text-left sm:text-base">
-                <p className="text-[0.75rem] uppercase tracking-[0.23em] text-[#8a7463]">
-                  {reservationsTitle || 'Reservations'}
-                </p>
-                <p className="mt-4 leading-relaxed">
-                  {reservationsBody}
-                </p>
+        {/* RESERVATIONS */}
+        <div className="space-y-4 pt-4">
+          <p className="text-[0.75rem] uppercase tracking-[0.23em] text-[#8a7463]">
+            {reservationsTitle}
+          </p>
 
-                <div className="mt-5 flex flex-col items-center justify-start gap-3 sm:flex-row">
-                  <Link
-                    href={reservationsPrimaryHref}
-                    className={`${btnPrimary} w-full sm:w-auto px-9 py-3 text-[0.8rem]`}
-                  >
-                    {reservationsPrimaryLabel || 'Book a table'}
-                  </Link>
-                  <Link
-                    href={reservationsSecondaryHref}
-                    className={`${btnSecondary} w-full sm:w-auto px-9 py-3 text-[0.8rem]`}
-                  >
-                    {reservationsSecondaryLabel || 'Email us'}
-                  </Link>
-                </div>
-              </div>
-            </div>
+          <p className="text-[0.97rem] leading-relaxed text-[#5b4b41]">
+            {reservationsBody}
+          </p>
 
-            {/* RIGHT - Map */}
-            <div className="overflow-hidden rounded-3xl border border-[#e1d6c9] bg-[#f8f2ea]">
-              <div className="relative h-[360px] sm:h-[440px] md:h-full">
-                <iframe
-                  src={mapEmbedUrl}
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                  className="h-full w-full border-0"
-                  allowFullScreen
-                />
-              </div>
-            </div>
+          <div className="flex flex-wrap gap-4 pt-2">
+            <Link
+              href={reservationsPrimaryHref}
+              className={`${btnPrimary} px-9 py-3 text-[0.8rem]`}
+            >
+              {reservationsPrimaryLabel}
+            </Link>
+            <Link
+              href={reservationsSecondaryHref}
+              className={`${btnSecondary} px-9 py-3 text-[0.8rem]`}
+            >
+              {reservationsSecondaryLabel}
+            </Link>
           </div>
         </div>
-      </section>
+
+      </div>
+
+      {/* RIGHT COLUMN — MAP */}
+      <div className="relative w-full h-[420px] sm:h-[520px] overflow-hidden rounded-3xl border border-[#e1d6c9] bg-white shadow-sm">
+        <iframe
+          src={mapEmbedUrl}
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          className="h-full w-full border-0"
+          allowFullScreen
+        />
+      </div>
+    </div>
+  </div>
+</section>
+
     </main>
   )
 }
